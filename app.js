@@ -22,33 +22,9 @@ function findTourById(tours, id) {
   return tours.find(t => t.id === id);
 }
 
-//defining routes
-//GET route
-// app.get('/', (req, res) => {
-//   // res.status(200).send('Hello from the server side!');
-//   res
-//     .status(200)
-//     .json({ message: 'Hello from the server side!', app: 'Natours' });
-// });
-
-// //POST route
-// app.post('/', (req, res) => {
-//   res.send('You can post to this endpoint...');
-// });
 const tours = JSON.parse(fs.readFileSync(FILE_DB, 'utf-8'));
 
-// let tours;
-
-// fs.readFile(
-//   `${__dirname}/dev-data/data/tours-simple.json`,
-//   'utf-8',
-//   (err, data) => {
-//     tours = JSON.parse(data);
-//   }
-// );
-
-//GET All Tours Implementation
-app.get('/api/v1/tours', (req, res) => {
+const getAllTours = (req, res) => {
   //return all tours
   res.status(HTTP_OK).json({
     status: SUCCESS,
@@ -57,10 +33,9 @@ app.get('/api/v1/tours', (req, res) => {
       tours, //ES6 format, don't need to specify key if they're the same.
     },
   });
-});
+};
 
-//GET tour by id
-app.get('/api/v1/tours/:id', (req, res) => {
+const getTourById = (req, res) => {
   const tour = findTourById(tours, Number(req.params.id));
 
   if (!tour) {
@@ -75,10 +50,9 @@ app.get('/api/v1/tours/:id', (req, res) => {
       tour,
     },
   });
-});
+};
 
-//POST - Create a new tour
-app.post('/api/v1/tours', (req, res) => {
+const createNewTour = (req, res) => {
   //console.log(req.body); //req.body available due to middleware
 
   const newId = tours.at(-1).id + 1;
@@ -95,10 +69,9 @@ app.post('/api/v1/tours', (req, res) => {
       },
     });
   });
-});
+};
 
-//PATCH Update Implementation
-app.patch('/api/v1/tours/:id', (req, res) => {
+const updateTour = (req, res) => {
   const id = Number(req.params.id);
   const tour = findTourById(tours, id);
 
@@ -121,10 +94,9 @@ app.patch('/api/v1/tours/:id', (req, res) => {
       },
     });
   });
-});
+};
 
-//DELETE Implementation
-app.delete('/api/v1/tours/:id', (req, res) => {
+const deleteTourById = (req, res) => {
   const deleteIndex = tours.findIndex(t => t.id === Number(req.params.id));
   if (deleteIndex === -1) {
     return res.status(HTTP_NOT_FOUND).json({
@@ -141,8 +113,32 @@ app.delete('/api/v1/tours/:id', (req, res) => {
       data: null,
     });
   });
-});
+};
 
+/* OLD CODE
+//GET All Tours Implementation
+app.get('/api/v1/tours', getAllTours);
+
+//GET tour by id
+app.get('/api/v1/tours/:id', getTourById);
+
+//POST - Create a new tour
+app.post('/api/v1/tours', createNewTour);
+
+//PATCH Update Implementation
+app.patch('/api/v1/tours/:id', updateTour);
+
+//DELETE Implementation
+app.delete('/api/v1/tours/:id', deleteTourById);
+*/
+
+//chaining same route
+app.route('/api/v1/tours').get(getAllTours).post(createNewTour);
+app
+  .route('/api/v1/tours/:id')
+  .get(getTourById)
+  .patch(updateTour)
+  .delete(deleteTourById);
 //starting up server
 app.listen(PORT, () => {
   console.log(`App is up and running on port ${PORT}...`);
