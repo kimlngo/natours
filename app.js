@@ -9,6 +9,7 @@ const HTTP_OK = 200;
 const HTTP_CREATED = 201;
 const HTTP_NO_CONTENT = 204;
 const HTTP_NOT_FOUND = 404;
+const HTTP_INTERNAL_ERROR = 500;
 const SUCCESS = 'success';
 const FAIL = 'fail';
 
@@ -126,6 +127,39 @@ const deleteTourById = (req, res) => {
   });
 };
 
+const getAllUsers = (req, res) => {
+  res.status(HTTP_INTERNAL_ERROR).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
+  });
+};
+
+const createNewUser = (req, res) => {
+  res.status(HTTP_INTERNAL_ERROR).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
+  });
+};
+
+const getUserById = (req, res) => {
+  res.status(HTTP_INTERNAL_ERROR).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
+  });
+};
+const updateUser = (req, res) => {
+  res.status(HTTP_INTERNAL_ERROR).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
+  });
+};
+
+const deleteUserById = (req, res) => {
+  res.status(HTTP_INTERNAL_ERROR).json({
+    status: 'error',
+    message: 'This route is not yet implemented',
+  });
+};
 /* OLD CODE
 //GET All Tours Implementation
 app.get('/api/v1/tours', getAllTours);
@@ -144,16 +178,28 @@ app.delete('/api/v1/tours/:id', deleteTourById);
 */
 
 //4) ROUTES
-//prettier-ignore
-app.route('/api/v1/tours')
-   .get(getAllTours)
-   .post(createNewTour);
+const tourRouter = express.Router();
+const userRouter = express.Router();
 
-app
-  .route('/api/v1/tours/:id')
+tourRouter.route('/').get(getAllTours).post(createNewTour);
+
+tourRouter
+  .route('/:id')
   .get(getTourById)
   .patch(updateTour)
   .delete(deleteTourById);
+
+userRouter.route('/').get(getAllUsers).post(createNewUser);
+
+userRouter
+  .route('/:id')
+  .get(getUserById)
+  .patch(updateUser)
+  .delete(deleteUserById);
+
+app.use('/api/v1/tours', tourRouter);
+app.use('/api/v1/users', userRouter);
+
 //starting up server
 app.listen(PORT, () => {
   console.log(`App is up and running on port ${PORT}...`);
