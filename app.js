@@ -1,12 +1,9 @@
 const fs = require('fs');
 const express = require('express');
-
+const morgan = require('morgan');
 const app = express();
 
-//middleware
-app.use(express.json());
-
-//Constants
+//0) Constants
 const PORT = 3000;
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;
@@ -17,17 +14,31 @@ const FAIL = 'fail';
 
 const FILE_DB = `${__dirname}/dev-data/data/tours-simple.json`;
 
-//Util functions
-function findTourById(tours, id) {
-  return tours.find(t => t.id === id);
-}
+//1) MIDDLEWARES
+app.use(morgan('dev'));
+app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log('Hello from middleware 👋');
+  //must call next() to pass execution to the next
+  next();
+});
+
+//add request timestamp to request object using middleware
+app.use((req, res, next) => {
+  req.timeStamp = new Date().toISOString();
+  next();
+});
+
+//2) POPULATE TOURS FROM FILE-BASE
 const tours = JSON.parse(fs.readFileSync(FILE_DB, 'utf-8'));
 
+//3) ALL HANDLERS
 const getAllTours = (req, res) => {
   //return all tours
   res.status(HTTP_OK).json({
     status: SUCCESS,
+    requestedAt: req.timeStamp,
     results: tours.length,
     data: {
       tours, //ES6 format, don't need to specify key if they're the same.
@@ -132,8 +143,12 @@ app.patch('/api/v1/tours/:id', updateTour);
 app.delete('/api/v1/tours/:id', deleteTourById);
 */
 
-//chaining same route
-app.route('/api/v1/tours').get(getAllTours).post(createNewTour);
+//4) ROUTES
+//prettier-ignore
+app.route('/api/v1/tours')
+   .get(getAllTours)
+   .post(createNewTour);
+
 app
   .route('/api/v1/tours/:id')
   .get(getTourById)
@@ -143,3 +158,8 @@ app
 app.listen(PORT, () => {
   console.log(`App is up and running on port ${PORT}...`);
 });
+
+//5) UTIL
+function findTourById(tours, id) {
+  return tours.find(t => t.id === id);
+}
