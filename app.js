@@ -5,9 +5,7 @@ const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
 const app = express();
 
-//0) Constants
-
-//1) MIDDLEWARES
+// MIDDLEWARES
 app.use(morgan('dev'));
 app.use(express.json());
 
@@ -23,28 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 
-//2) POPULATE TOURS FROM FILE-BASE
-
-//3) ALL HANDLERS
-
-/* OLD CODE
-//GET All Tours Implementation
-app.get('/api/v1/tours', getAllTours);
-
-//GET tour by id
-app.get('/api/v1/tours/:id', getTourById);
-
-//POST - Create a new tour
-app.post('/api/v1/tours', createNewTour);
-
-//PATCH Update Implementation
-app.patch('/api/v1/tours/:id', updateTour);
-
-//DELETE Implementation
-app.delete('/api/v1/tours/:id', deleteTourById);
-*/
-
-//4) ROUTES
+// ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 

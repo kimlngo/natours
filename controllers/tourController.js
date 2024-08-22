@@ -15,6 +15,20 @@ function findTourById(tours, id) {
   return tours.find(t => t.id === id);
 }
 
+exports.validateTourId = (req, res, next, val) => {
+  console.log(`Validate Tour ID. ID = ${val}`);
+  const tour = findTourById(tours, Number(val));
+
+  if (!tour) {
+    return res.status(HTTP_NOT_FOUND).json({
+      status: FAIL,
+      message: `Invalid id = ${val}`,
+    });
+  }
+
+  next();
+};
+
 exports.getAllTours = (req, res) => {
   //return all tours
   res.status(HTTP_OK).json({
@@ -22,20 +36,13 @@ exports.getAllTours = (req, res) => {
     requestedAt: req.timeStamp,
     results: tours.length,
     data: {
-      tours, //ES6 format, don't need to specify key if they're the same.
+      tours,
     },
   });
 };
 
 exports.getTourById = (req, res) => {
   const tour = findTourById(tours, Number(req.params.id));
-
-  if (!tour) {
-    return res.status(HTTP_NOT_FOUND).json({
-      status: FAIL,
-    });
-  }
-
   res.status(HTTP_OK).json({
     status: SUCCESS,
     data: {
@@ -45,8 +52,6 @@ exports.getTourById = (req, res) => {
 };
 
 exports.createNewTour = (req, res) => {
-  //console.log(req.body); //req.body available due to middleware
-
   const newId = tours.at(-1).id + 1;
   const newTour = Object.assign({ id: newId }, req.body);
 
@@ -64,14 +69,7 @@ exports.createNewTour = (req, res) => {
 };
 
 exports.updateTour = (req, res) => {
-  const id = Number(req.params.id);
-  const tour = findTourById(tours, id);
-
-  if (!tour) {
-    return res.status(HTTP_NOT_FOUND).json({
-      status: FAIL,
-    });
-  }
+  const tour = findTourById(tours, Number(req.params.id));
 
   Object.entries(req.body).forEach(entry => {
     tour[entry[0]] = entry[1];
@@ -90,11 +88,6 @@ exports.updateTour = (req, res) => {
 
 exports.deleteTourById = (req, res) => {
   const deleteIndex = tours.findIndex(t => t.id === Number(req.params.id));
-  if (deleteIndex === -1) {
-    return res.status(HTTP_NOT_FOUND).json({
-      status: FAIL,
-    });
-  }
 
   tours.splice(deleteIndex, 1);
 
