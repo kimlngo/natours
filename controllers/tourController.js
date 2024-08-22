@@ -3,6 +3,7 @@ const fs = require('fs');
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;
 const HTTP_NO_CONTENT = 204;
+const HTTP_BAD_REQUEST = 400;
 const HTTP_NOT_FOUND = 404;
 const SUCCESS = 'success';
 const FAIL = 'fail';
@@ -29,6 +30,26 @@ exports.validateTourId = (req, res, next, val) => {
   next();
 };
 
+/**
+ * Check if body contains the name & price property
+ * If not, send back 400 (bad request)
+ *
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ */
+exports.validateReqBody = function (req, res, next) {
+  const { name, price } = req.body;
+
+  if (!name || !price) {
+    return res.status(HTTP_BAD_REQUEST).json({
+      status: FAIL,
+      message: 'Missing name or price',
+    });
+  }
+
+  next();
+};
 exports.getAllTours = (req, res) => {
   //return all tours
   res.status(HTTP_OK).json({
