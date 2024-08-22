@@ -3,10 +3,13 @@ const morgan = require('morgan');
 
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
+
 const app = express();
 
 // MIDDLEWARES
-app.use(morgan('dev'));
+if (process.env.NODE_ENV.trim() === 'development') {
+  app.use(morgan('dev'));
+}
 app.use(express.json());
 
 // Access static files
