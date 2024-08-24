@@ -2,12 +2,13 @@ const express = require('express');
 const tourCtrl = require('./../controllers/tourController');
 const router = express.Router();
 
-router.param('id', tourCtrl.validateTourId);
+// router.param('id', tourCtrl.validateTourId);
 
+//prettier-ignore
 router
   .route('/')
   .get(tourCtrl.getAllTours)
-  .post(tourCtrl.validateReqBody, tourCtrl.createNewTour);
+  .post(tourCtrl.createNewTour);
 
 router
   .route('/:id')
