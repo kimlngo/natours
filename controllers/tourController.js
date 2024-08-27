@@ -10,8 +10,10 @@ const {
 } = require('./../utils/constant');
 
 const EXCLUDED_FIELDS = ['page', 'sort', 'limit', 'fields'];
-const DEFAULT_SORT_BY = '-createdAt';
+const DEFAULT_SORT_BY = 'price';
 const DEFAULT_PROJECTION = '-__v';
+const DEFAULT_PAGE_ONE = 1;
+const DEFAULT_LIMIT_PER_PAGE = 10;
 /**
  * Remove excluded keys {@link EXCLUDED_FIELDS} from the rawQuery
  * @param {*} rawQuery
@@ -38,6 +40,7 @@ function enhanceFilter(queryObj) {
 /**
  * Sort Implementation
  * sort(-price -ratingsAverage)
+ *
  * accending order: price
  * decending order: -price
  * @param {*} sort
@@ -53,6 +56,7 @@ function sort(sort, query) {
 
 /**
  * Fields Projection
+ *
  * include a field name => inclusive (e.g: price)
  * include -fieldName => exclusive (e.g: -price)
  * @param {*} fields
@@ -73,6 +77,37 @@ function fieldsProjection(fields, query) {
 function splitAndJoin(inputStr) {
   return inputStr.split(',').join(' ');
 }
+
+/**
+ * Extract query string page & limit and calculate the skip operator
+ *
+ * To ensure the result is consistent, the original results should have been sorted based on one or more conditions. For example: original tours are sorted based on the price (low -> high) then apply pagination
+ *
+ *  Otherwise, the order is non-deterministic and pagination will not work as expected (a tour may show up in more than one page).
+ * @param {*} rawQuery
+ * @param {*} query
+ * @returns query with pagination added
+ */
+async function pagination(rawQuery, query) {
+  const page = Number(rawQuery.page) || DEFAULT_PAGE_ONE;
+  const limit = Number(rawQuery.limit) || DEFAULT_LIMIT_PER_PAGE;
+  /**
+   * page 1: 1 - 10
+   * page 2: 11 - 20
+   * page 3: 21 - 30
+   * For page 3: skip = (3 - 1) * 10; => (page - 1) * limit
+   */
+  const skip = (page - 1) * limit;
+
+  if (rawQuery.page) {
+    //Get the total number of tours
+    const totalToursCount = await TourModel.countDocuments();
+    if (skip >= totalToursCount) throw new Error('Page does not exist!');
+  }
+
+  return query.skip(skip).limit(limit);
+}
+
 exports.getAllTours = async function (req, res) {
   try {
     const rawQuery = req.query;
@@ -92,6 +127,9 @@ exports.getAllTours = async function (req, res) {
     //3)Fields Projection
     query = fieldsProjection(rawQuery.fields, query);
 
+    //4)Pagination
+    query = await pagination(rawQuery, query);
+
     //EXECUTE query
     const tours = await query;
 
@@ -106,7 +144,7 @@ exports.getAllTours = async function (req, res) {
   } catch (err) {
     res.status(HTTP_NOT_FOUND).json({
       status: FAIL,
-      message: 'Could not load the tours!',
+      message: err.message,
     });
   }
 };
