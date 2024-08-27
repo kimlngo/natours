@@ -11,6 +11,7 @@ const {
 
 const EXCLUDED_FIELDS = ['page', 'sort', 'limit', 'fields'];
 const DEFAULT_SORT_BY = '-createdAt';
+const DEFAULT_PROJECTION = '-__v';
 /**
  * Remove excluded keys {@link EXCLUDED_FIELDS} from the rawQuery
  * @param {*} rawQuery
@@ -37,49 +38,62 @@ function enhanceFilter(queryObj) {
 /**
  * Sort Implementation
  * sort(-price -ratingsAverage)
- * price: accending order
- * -price: decending order
+ * accending order: price
+ * decending order: -price
  * @param {*} sort
  * @param {*} query
  * @returns sortedQuery
  */
 function sort(sort, query) {
-  if (sort) {
-    const sortBy = sort.split(',').join(' ');
-    query = query.sort(sortBy);
-  } else {
-    //default sort
-    query = query.sort(DEFAULT_SORT_BY);
-  }
-  return query;
+  //prettier-ignore
+  return sort 
+    ? query.sort(splitAndJoin(sort)) 
+    : query.sort(DEFAULT_SORT_BY);
+}
+
+/**
+ * Fields Projection
+ * include a field name => inclusive (e.g: price)
+ * include -fieldName => exclusive (e.g: -price)
+ * @param {*} fields
+ * @param {*} query
+ * @returns projectedQuery
+ */
+function fieldsProjection(fields, query) {
+  return fields
+    ? query.select(splitAndJoin(fields))
+    : query.select(DEFAULT_PROJECTION);
+}
+
+/**
+ * Util function to split inputStr by , and then join by ' '
+ * @param {*} inputStr
+ * @returns splitted & joined String
+ */
+function splitAndJoin(inputStr) {
+  return inputStr.split(',').join(' ');
 }
 exports.getAllTours = async function (req, res) {
   try {
-    console.log(req.query);
-    //get all documents in the collection
-    // //FIRST Impl: provide a filter object
-    // const tours = await TourModel.find({
-    //   duration: 5,
-    //   difficulty: 'easy',
-    // });
+    const rawQuery = req.query;
+    console.log('rawQuery:', rawQuery);
 
     //BUILD QUERY
     //1A)EXCLUDE reserved keywords
-    const queryObj = excludeKeyWords(req.query);
+    const queryObj = excludeKeyWords(rawQuery);
 
     //1B)FILTER greater/less than conditions
     const enhanceQueryObj = enhanceFilter(queryObj);
     let query = TourModel.find(enhanceQueryObj);
 
     //2)SORT Implementation
-    query = sort(req.query.sort, query);
+    query = sort(rawQuery.sort, query);
+
+    //3)Fields Projection
+    query = fieldsProjection(rawQuery.fields, query);
 
     //EXECUTE query
     const tours = await query;
-
-    //SECOND Impl: use special Mongoose method where/equals
-    // const query = TourModel.find().where('duration').gt(5);
-    // const tours = await query;
 
     //SEND Response
     res.status(HTTP_OK).json({
