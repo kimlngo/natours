@@ -4,6 +4,11 @@ const router = express.Router();
 
 // router.param('id', tourCtrl.validateTourId);
 
+//alias for top 5 best tours
+router
+  .route('/best-five-tours')
+  .get(tourCtrl.aliasBestFiveTours, tourCtrl.getAllTours);
+
 //prettier-ignore
 router
   .route('/')

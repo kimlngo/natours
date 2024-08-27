@@ -108,6 +108,14 @@ async function pagination(rawQuery, query) {
   return query.skip(skip).limit(limit);
 }
 
+exports.aliasBestFiveTours = function (req, res, next) {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,duration,difficulty,ratingsAverage,summary';
+
+  next();
+};
+
 exports.getAllTours = async function (req, res) {
   try {
     const rawQuery = req.query;
