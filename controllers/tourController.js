@@ -10,7 +10,7 @@ const {
 } = require('./../utils/constant');
 
 const EXCLUDED_FIELDS = ['page', 'sort', 'limit', 'fields'];
-
+const DEFAULT_SORT_BY = '-createdAt';
 /**
  * Remove excluded keys {@link EXCLUDED_FIELDS} from the rawQuery
  * @param {*} rawQuery
@@ -27,13 +27,32 @@ function excludeKeyWords(rawQuery) {
  * @param {*} queryObj
  * @returns query object after replacement
  */
-function replaceEqualityWord(queryObj) {
+function enhanceFilter(queryObj) {
   let queryStr = JSON.stringify(queryObj);
   return JSON.parse(
     queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`),
   );
 }
 
+/**
+ * Sort Implementation
+ * sort(-price -ratingsAverage)
+ * price: accending order
+ * -price: decending order
+ * @param {*} sort
+ * @param {*} query
+ * @returns sortedQuery
+ */
+function sort(sort, query) {
+  if (sort) {
+    const sortBy = sort.split(',').join(' ');
+    query = query.sort(sortBy);
+  } else {
+    //default sort
+    query = query.sort(DEFAULT_SORT_BY);
+  }
+  return query;
+}
 exports.getAllTours = async function (req, res) {
   try {
     console.log(req.query);
@@ -45,11 +64,16 @@ exports.getAllTours = async function (req, res) {
     // });
 
     //BUILD QUERY
+    //1A)EXCLUDE reserved keywords
     const queryObj = excludeKeyWords(req.query);
 
-    //implement greater/less than conditions
-    const enhanceQueryObj = replaceEqualityWord(queryObj);
-    const query = TourModel.find(enhanceQueryObj);
+    //1B)FILTER greater/less than conditions
+    const enhanceQueryObj = enhanceFilter(queryObj);
+    let query = TourModel.find(enhanceQueryObj);
+
+    //2)SORT Implementation
+    query = sort(req.query.sort, query);
+
     //EXECUTE query
     const tours = await query;
 
