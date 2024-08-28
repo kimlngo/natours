@@ -125,3 +125,44 @@ exports.deleteTourById = async function (req, res) {
     });
   }
 };
+
+exports.getTourStats = async function (req, res) {
+  try {
+    const stats = await TourModel.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          _id: { $toUpper: '$difficulty' },
+          // _id: '$difficulty',
+          count: { $sum: 1 },
+          totalRatings: { $sum: '$ratingsAverage' },
+          avgRatings: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $sort: { avgPrice: 1 },
+      },
+      {
+        $match: { _id: { $ne: 'EASY' } },
+      },
+    ]);
+
+    res.status(HTTP_OK).json({
+      status: SUCCESS,
+      data: {
+        stats,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(HTTP_NOT_FOUND).json({
+      status: FAIL,
+      message: err.message,
+    });
+  }
+};

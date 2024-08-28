@@ -9,6 +9,7 @@ router
   .route('/best-five-tours')
   .get(tourCtrl.aliasBestFiveTours, tourCtrl.getAllTours);
 
+router.route('/stats').get(tourCtrl.getTourStats);
 //prettier-ignore
 router
   .route('/')
