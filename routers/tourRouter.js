@@ -10,6 +10,7 @@ router
   .get(tourCtrl.aliasBestFiveTours, tourCtrl.getAllTours);
 
 router.route('/stats').get(tourCtrl.getTourStats);
+router.route('/monthly-plan/:year').get(tourCtrl.getMonthlyPlan);
 //prettier-ignore
 router
   .route('/')

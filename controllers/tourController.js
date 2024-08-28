@@ -159,7 +159,69 @@ exports.getTourStats = async function (req, res) {
       },
     });
   } catch (err) {
-    console.log(err);
+    res.status(HTTP_NOT_FOUND).json({
+      status: FAIL,
+      message: err.message,
+    });
+  }
+};
+
+exports.getMonthlyPlan = async function (req, res) {
+  try {
+    const year = Number(req.params.year);
+    const plans = await TourModel.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $project: {
+          month: {
+            $dateToString: {
+              format: '%B',
+              date: '$startDates',
+            },
+          },
+          name: 1,
+        },
+      },
+      {
+        $group: {
+          // _id: { $month: '$startDates' },
+          _id: { $toUpper: '$month' },
+          numTourStarts: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        $addFields: { month: '$_id' },
+      },
+      {
+        $project: { _id: 0 },
+      },
+      {
+        $sort: { numTourStarts: -1 }, //decending order
+      },
+      {
+        $limit: 100,
+      },
+    ]);
+
+    res.status(HTTP_OK).json({
+      status: SUCCESS,
+      results: plans.length,
+      data: {
+        plans,
+      },
+    });
+  } catch (err) {
     res.status(HTTP_NOT_FOUND).json({
       status: FAIL,
       message: err.message,
