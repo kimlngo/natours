@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 //Create Mongoose Schema
 const simpleTourSchema = new mongoose.Schema({
@@ -61,10 +62,11 @@ const tourSchema = new mongoose.Schema(
       select: false,
     },
     startDates: [Date],
+    slug: String,
   },
   {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true, versionKey: false },
+    toObject: { virtuals: true, versionKey: false },
   },
 );
 
@@ -72,6 +74,25 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+//Document middleware
+//save only works for .save() and .create() operation. It won't work with insertMany
+tourSchema.pre('save', function (next) {
+  //create slug before saving the document
+  //"this" refer to the to-be-saved document
+  this.slug = slugify(this.name, { lower: true });
+  console.log(`slug created: ${this.slug}`);
+  next();
+});
+
+tourSchema.pre('save', function (next) {
+  console.log('This is another pre-document-middleware');
+  next();
+});
+
+tourSchema.post('save', function (doc, next) {
+  console.log(`Doc saved successfully with id = ${doc._id}`);
+  next();
+});
 const Tour = new mongoose.model('Tour', tourSchema); //convention: to name mongoose model with first capital letter
 
 module.exports = Tour;
