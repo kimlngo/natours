@@ -84,7 +84,7 @@ exports.createNewTour = async function (req, res) {
   } catch (err) {
     res.status(HTTP_BAD_REQUEST).json({
       status: FAIL,
-      message: 'Invalid data sent!',
+      message: err.message,
     });
   }
 };
@@ -105,7 +105,7 @@ exports.updateTour = async function (req, res) {
   } catch (err) {
     res.status(HTTP_NOT_FOUND).json({
       status: FAIL,
-      message: 'Could not update tour!',
+      message: err.message,
     });
   }
 };
