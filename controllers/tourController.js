@@ -66,7 +66,7 @@ exports.getTourById = async function (req, res) {
   } catch (err) {
     res.status(HTTP_NOT_FOUND).json({
       status: FAIL,
-      message: 'Could not load the tours!',
+      message: err.message,
     });
   }
 };

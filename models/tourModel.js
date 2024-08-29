@@ -63,10 +63,14 @@ const tourSchema = new mongoose.Schema(
     },
     startDates: [Date],
     slug: String,
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
-    toJSON: { virtuals: true, versionKey: false },
-    toObject: { virtuals: true, versionKey: false },
+    toJSON: { virtuals: true /*versionKey: false*/ },
+    toObject: { virtuals: true /*versionKey: false*/ },
   },
 );
 
@@ -74,7 +78,7 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-//Document middleware
+//DOCUMENT middleware
 //save only works for .save() and .create() operation. It won't work with insertMany
 tourSchema.pre('save', function (next) {
   //create slug before saving the document
@@ -91,6 +95,20 @@ tourSchema.pre('save', function (next) {
 
 tourSchema.post('save', function (doc, next) {
   console.log(`Doc saved successfully with id = ${doc._id}`);
+  next();
+});
+
+//QUERY Middleware
+// tourSchema.pre('find', function (next) {
+tourSchema.pre(/^find/, function (next) {
+  //this refers to query
+  this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
+  next();
+});
+
+tourSchema.post(/^find/, function (docs, next) {
+  console.log(`Query took: ${Date.now() - this.start}ms`);
   next();
 });
 const Tour = new mongoose.model('Tour', tourSchema); //convention: to name mongoose model with first capital letter
