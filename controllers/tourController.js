@@ -110,9 +110,10 @@ exports.updateTour = async function (req, res) {
   }
 };
 
-exports.deleteTourById = async function (req, res) {
+exports.deleteTourByIds = async function (req, res) {
   try {
-    await TourModel.findByIdAndDelete(req.params.id);
+    const listIds = req.params.id.split(',');
+    await TourModel.deleteMany({ _id: { $in: listIds } });
 
     res.status(HTTP_NO_CONTENT).json({
       status: SUCCESS,
