@@ -6,6 +6,7 @@ exports.HTTP_NOT_FOUND = 404;
 exports.HTTP_INTERNAL_ERROR = 500;
 exports.SUCCESS = 'success';
 exports.FAIL = 'fail';
+exports.ERROR = 'error';
 
 exports.EXCLUDED_FIELDS = ['page', 'sort', 'limit', 'fields'];
 exports.DEFAULT_SORT_BY = 'price';

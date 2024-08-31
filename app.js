@@ -3,7 +3,12 @@ const morgan = require('morgan');
 
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
-const { HTTP_NOT_FOUND, FAIL } = require('./utils/constant');
+const {
+  HTTP_NOT_FOUND,
+  FAIL,
+  HTTP_INTERNAL_ERROR,
+  ERROR,
+} = require('./utils/constant');
 
 const app = express();
 
@@ -28,9 +33,22 @@ app.use('/api/v1/users', userRouter);
 
 // Default 404 Route
 app.all('*', (req, res, next) => {
-  res.status(HTTP_NOT_FOUND).json({
-    status: FAIL,
-    message: `Cannot find ${req.originalUrl}`,
+  const err = new Error(`Cannot find ${req.originalUrl}`);
+  err.statusCode = HTTP_NOT_FOUND;
+  err.status = FAIL;
+
+  //calling next() with err as param will skip all other middlewares and forward straight to the error handling middleware.
+  next(err);
+});
+
+//Global error handling middlware
+app.use((err, req, res, next) => {
+  err.statusCode = err.statusCode || HTTP_INTERNAL_ERROR;
+  err.status = err.status || ERROR;
+
+  res.status(err.statusCode).json({
+    status: err.status,
+    message: err.message,
   });
 });
 
