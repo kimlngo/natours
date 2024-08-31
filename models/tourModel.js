@@ -139,9 +139,8 @@ tourSchema.post(/^find/, function (docs, next) {
 //AGGREGATION Middleware
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  console.log(this.pipeline());
   next();
 });
-const Tour = new mongoose.model('Tour', tourSchema); //convention: to name mongoose model with first capital letter
+const TourModel = new mongoose.model('Tour', tourSchema); //convention: to name mongoose model with first capital letter
 
-module.exports = Tour;
+module.exports = TourModel;

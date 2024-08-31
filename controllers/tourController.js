@@ -91,15 +91,19 @@ exports.createNewTour = async function (req, res) {
 
 exports.updateTour = async function (req, res) {
   try {
-    const tour = await TourModel.findByIdAndUpdate(req.params.id, req.body, {
-      new: true, //return new document
-      runValidators: true,
-    });
+    const updatedTour = await TourModel.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true, //return new document
+        runValidators: true,
+      },
+    );
 
     res.status(HTTP_OK).json({
       status: SUCCESS,
       data: {
-        tour,
+        tour: updatedTour,
       },
     });
   } catch (err) {

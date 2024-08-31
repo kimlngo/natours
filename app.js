@@ -3,6 +3,7 @@ const morgan = require('morgan');
 
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
+const { HTTP_NOT_FOUND, FAIL } = require('./utils/constant');
 
 const app = express();
 
@@ -15,13 +16,6 @@ app.use(express.json());
 // Access static files
 app.use(express.static(`${__dirname}/public`));
 
-//custom middleware
-// app.use((req, res, next) => {
-//   console.log('Hello from middleware 👋');
-//   //must call next() to pass execution to the next
-//   next();
-// });
-
 //add request timestamp to request object using middleware
 app.use((req, res, next) => {
   req.timeStamp = new Date().toISOString();
@@ -31,5 +25,13 @@ app.use((req, res, next) => {
 // ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+
+// Default 404 Route
+app.all('*', (req, res, next) => {
+  res.status(HTTP_NOT_FOUND).json({
+    status: FAIL,
+    message: `Cannot find ${req.originalUrl}`,
+  });
+});
 
 module.exports = app;
