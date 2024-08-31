@@ -1,3 +1,6 @@
+exports.DEV = 'development';
+exports.PROD = 'production';
+
 exports.HTTP_200_OK = 200;
 exports.HTTP_201_CREATED = 201;
 exports.HTTP_204_NO_CONTENT = 204;
