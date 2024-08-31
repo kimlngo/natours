@@ -19,7 +19,7 @@ exports.aliasBestFiveTours = function (req, res, next) {
   next();
 };
 
-exports.getAllTours = catchAsync(async function (req, res) {
+exports.getAllTours = catchAsync(async function (req, res, next) {
   const rawQuery = req.query;
   const dataAccessImpl = new DataAccessImpl(TourModel.find(), rawQuery);
 
@@ -41,29 +41,26 @@ exports.getAllTours = catchAsync(async function (req, res) {
       tours,
     },
   });
-  // res.status(HTTP_NOT_FOUND).json({
-  //   status: FAIL,
-  //   message: err.message,
 });
 
-exports.getTourById = catchAsync(async function (req, res) {
+exports.getTourById = catchAsync(async function (req, res, next) {
   const tour = await TourModel.findById(req.params.id);
   // const tour = await Tour.findOne({_id: req.params.id});
 
-  if (!tour)
-    throw new AppError(
-      `Can't find tour with id ${req.params.id}`,
-      HTTP_404_NOT_FOUND,
+  if (!tour) {
+    return next(
+      new AppError(
+        `No tour found with id '${req.params.id}'`,
+        HTTP_404_NOT_FOUND,
+      ),
     );
+  }
   res.status(HTTP_200_OK).json({
     status: SUCCESS,
     data: {
       tour,
     },
   });
-  // res.status(HTTP_NOT_FOUND).json({
-  //   status: FAIL,
-  //   message: err.message,
 });
 
 exports.createNewTour = catchAsync(async function (req, res, next) {
@@ -77,7 +74,7 @@ exports.createNewTour = catchAsync(async function (req, res, next) {
   });
 });
 
-exports.updateTour = catchAsync(async function (req, res) {
+exports.updateTour = catchAsync(async function (req, res, next) {
   const updatedTour = await TourModel.findByIdAndUpdate(
     req.params.id,
     req.body,
@@ -87,31 +84,43 @@ exports.updateTour = catchAsync(async function (req, res) {
     },
   );
 
+  if (!tour) {
+    return next(
+      new AppError(
+        `No tour found with id '${req.params.id}'`,
+        HTTP_404_NOT_FOUND,
+      ),
+    );
+  }
+
   res.status(HTTP_200_OK).json({
     status: SUCCESS,
     data: {
       tour: updatedTour,
     },
   });
-  // res.status(HTTP_NOT_FOUND).json({
-  //   status: FAIL,
-  //   message: err.message,
 });
 
-exports.deleteTourByIds = catchAsync(async function (req, res) {
+exports.deleteTourByIds = catchAsync(async function (req, res, next) {
   const listIds = req.params.id.split(',');
-  await TourModel.deleteMany({ _id: { $in: listIds } });
+  const result = await TourModel.deleteMany({ _id: { $in: listIds } });
+
+  if (result?.acknowledged && result?.deletedCount === 0) {
+    return next(
+      new AppError(
+        `No tour found with id '${req.params.id}'`,
+        HTTP_404_NOT_FOUND,
+      ),
+    );
+  }
 
   res.status(HTTP_204_NO_CONTENT).json({
     status: SUCCESS,
     data: null,
   });
-  // res.status(HTTP_NOT_FOUND).json({
-  //   status: FAIL,
-  //   message: 'Could not delete tour!',
 });
 
-exports.getTourStats = catchAsync(async function (req, res) {
+exports.getTourStats = catchAsync(async function (req, res, next) {
   const stats = await TourModel.aggregate([
     {
       $match: { ratingsAverage: { $gte: 4.5 } },
@@ -147,7 +156,7 @@ exports.getTourStats = catchAsync(async function (req, res) {
   //   message: err.message,
 });
 
-exports.getMonthlyPlan = catchAsync(async function (req, res) {
+exports.getMonthlyPlan = catchAsync(async function (req, res, next) {
   const year = Number(req.params.year);
   const plans = await TourModel.aggregate([
     {
