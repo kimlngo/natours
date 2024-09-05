@@ -1,8 +1,15 @@
 const express = require('express');
-const userCtrl = require('./../controllers/userCountroller');
+const userCtrl = require('./../controllers/userController');
+const authCtrl = require('./../controllers/authController');
 const router = express.Router();
 
-router.route('/').get(userCtrl.getAllUsers).post(userCtrl.createNewUser);
+router.post('/signup', authCtrl.signUp);
+
+//prettier-ignore
+router
+  .route('/')
+  .get(userCtrl.getAllUsers)
+  .post(userCtrl.createNewUser);
 
 router
   .route('/:id')
