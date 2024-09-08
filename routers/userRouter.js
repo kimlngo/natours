@@ -4,6 +4,7 @@ const authCtrl = require('./../controllers/authController');
 const router = express.Router();
 
 router.post('/signup', authCtrl.signUp);
+router.post('/login', authCtrl.login);
 
 //prettier-ignore
 router
