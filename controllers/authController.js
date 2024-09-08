@@ -1,3 +1,4 @@
+const util = require('util');
 const { catchAsync } = require('../error/error');
 const {
   HTTP_201_CREATED,
@@ -23,6 +24,7 @@ exports.signUp = catchAsync(async function (req, res, next) {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    passwordChangedAt: req.body.passwordChangedAt,
   });
 
   const token = signToken(newUser._id);
@@ -61,4 +63,53 @@ exports.login = catchAsync(async (req, res, next) => {
     status: SUCCESS,
     token,
   });
+});
+
+exports.protect = catchAsync(async (req, res, next) => {
+  //1) check if token exists in req headers
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next(
+      new AppError(
+        'You are not logged in! Please login to get access',
+        HTTP_401_UNAUTHORIZED,
+      ),
+    );
+  }
+  //2) verify token
+  const decodedData = await util.promisify(jwt.verify)(
+    token,
+    process.env.JWT_SECRET,
+  );
+
+  //3) check if user still exists
+  const curUser = await UserModel.findById(decodedData.id);
+  if (!curUser) {
+    return next(
+      new AppError(
+        'The token belongs to a non-existing user',
+        HTTP_401_UNAUTHORIZED,
+      ),
+    );
+  }
+  //4) check if user changed password after the token was issued
+  if (curUser.changesPasswordAfter(decodedData.iat)) {
+    return next(
+      new AppError(
+        'User has recently changed password! Please login again',
+        HTTP_401_UNAUTHORIZED,
+      ),
+    );
+  }
+
+  //5) valid token, GRANT ACCESS TO PROTECTED ROUTE
+  req.user = curUser;
+  next();
 });

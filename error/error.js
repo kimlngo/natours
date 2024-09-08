@@ -3,6 +3,7 @@ const {
   ERROR,
   PROD,
   HTTP_400_BAD_REQUEST,
+  HTTP_401_UNAUTHORIZED,
 } = require('../utils/constant');
 const AppError = require('./appError');
 
@@ -10,7 +11,8 @@ const AppError = require('./appError');
 const CAST_ERROR = 'CastError';
 const VALIDATION_ERROR = 'ValidationError';
 const DUPLICATED_FIELD_CODE = 11000;
-
+const INVALID_TOKEN_ERR = 'JsonWebTokenError';
+const EXPIRED_TOKEN_ERR = 'TokenExpiredError';
 exports.catchAsync = function (appliedFn) {
   return (req, res, next) => {
     appliedFn(req, res, next).catch(next);
@@ -22,7 +24,7 @@ exports.errorHandler = function (err, req, res, next) {
   err.status = err.status || ERROR;
 
   if (process.env.NODE_ENV.trim() === PROD) {
-    let errCopy = handleMongoDBErrors(err);
+    let errCopy = handleErrors(err);
     sendProdError(errCopy, res);
   } else {
     sendDevError(err, res);
@@ -47,7 +49,7 @@ function sendProdError(err, res) {
     });
     //Programming or other unknown error: don't leak error details
   } else {
-    console.error(`ERROR 💥 ${err}`);
+    console.error('ERROR 💥', err);
     res.status(HTTP_500_INTERNAL_ERROR).json({
       status: ERROR,
       message: 'Some errors happened. Please try again later!',
@@ -55,7 +57,7 @@ function sendProdError(err, res) {
   }
 }
 
-function handleMongoDBErrors(err) {
+function handleErrors(err) {
   //handle MongoDB Error
   if (err.name === CAST_ERROR) {
     return handleCastError(err);
@@ -63,6 +65,12 @@ function handleMongoDBErrors(err) {
     return handleDuplicatedField(err);
   } else if (err.name === VALIDATION_ERROR) {
     return handleValidationError(err);
+
+    //handle json web token error
+  } else if (err.name === INVALID_TOKEN_ERR) {
+    return handleInvalidTokenError();
+  } else if (err.name === EXPIRED_TOKEN_ERR) {
+    return handleExpiredTokenError();
   } else return err;
 }
 
@@ -82,4 +90,18 @@ function handleValidationError(err) {
     .map(el => el.message)
     .join('. ')}`;
   return new AppError(message, HTTP_400_BAD_REQUEST);
+}
+
+function handleInvalidTokenError() {
+  return new AppError(
+    'Invalid token. Please login again!',
+    HTTP_401_UNAUTHORIZED,
+  );
+}
+
+function handleExpiredTokenError() {
+  return new AppError(
+    'Your token has expired. Please login again!',
+    HTTP_401_UNAUTHORIZED,
+  );
 }

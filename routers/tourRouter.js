@@ -1,5 +1,6 @@
 const express = require('express');
 const tourCtrl = require('./../controllers/tourController');
+const authCtrl = require('./../controllers/authController');
 const router = express.Router();
 
 // router.param('id', tourCtrl.validateTourId);
@@ -14,7 +15,7 @@ router.route('/monthly-plan/:year').get(tourCtrl.getMonthlyPlan);
 //prettier-ignore
 router
   .route('/')
-  .get(tourCtrl.getAllTours)
+  .get(authCtrl.protect, tourCtrl.getAllTours)
   .post(tourCtrl.createNewTour);
 
 router
