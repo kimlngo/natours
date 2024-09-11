@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 const cryptoUtil = require('./../utils/cryptoUtil');
 const { USER, GUIDE, LEAD_GUIDE, ADMIN } = require('../utils/constant');
 
-const HEX = 'hex';
-const TEN_MINUTES_MS = 10 * 60 * 1000;
+const PASSWORD = 'password';
+const TEN_MINS_IN_MS = 10 * 60 * 1000;
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -52,7 +51,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre('save', async function (next) {
   // Only run this function if password was actually modified
-  if (!this.isModified('password')) return next();
+  if (!this.isModified(PASSWORD)) return next();
 
   //hash/encrypt password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
@@ -63,8 +62,10 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) next();
+  if (!this.isModified(PASSWORD) || this.isNew) next();
 
+  //The -1000 here is reducing the current time by 1second. This is to ensure that
+  //the password reset time is < than the token issued at (iat).
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });
@@ -92,13 +93,11 @@ userSchema.methods.changesPasswordAfter = function (jwtTimestamp) {
 };
 
 userSchema.methods.createPasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString(HEX);
+  const resetToken = cryptoUtil.createRandomResetToken();
 
   this.passwordResetToken = cryptoUtil.createHashPasswordResetToken(resetToken);
+  this.passwordResetExpires = Date.now() + TEN_MINS_IN_MS;
 
-  this.passwordResetExpires = Date.now() + TEN_MINUTES_MS;
-
-  console.log({ resetToken, passwordResetToken: this.passwordResetToken });
   return resetToken;
 };
 

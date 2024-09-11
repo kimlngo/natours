@@ -153,16 +153,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   //3) Send the token to user's email
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}\nIf you didn't forget your password, please ignore this email`;
-
+  const emailOpts = prepareEmail(req, resetToken);
   try {
-    await emailSender.sendEmail({
-      email,
-      subject: 'Reset Your Password (Valid for 10 minutes)',
-      message,
-    });
+    await emailSender.sendEmail(emailOpts);
 
     res.status(HTTP_200_OK).json({
       status: SUCCESS,
@@ -182,14 +175,29 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
+function prepareEmail(req, resetToken) {
+  const email = req.body.email;
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}\nIf you didn't forget your password, please ignore this email`;
+
+  return {
+    email,
+    subject: 'Reset Your Password (Valid for 10 minutes)',
+    message,
+  };
+}
+
 exports.resetPassword = catchAsync(async (req, res, next) => {
   //1) Get the token from url
   const passwordResetToken = req.params.token;
-  const hashToken = cryptoUtil.createHashPasswordResetToken(passwordResetToken);
+  const hashedToken =
+    cryptoUtil.createHashPasswordResetToken(passwordResetToken);
 
   //2) if token has not expired and user exists, set the new password
+  //Find a user with such password reset token and has password expiry date/time beyond current time
   const user = await UserModel.findOne({
-    passwordResetToken: hashToken,
+    passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
 
@@ -202,6 +210,8 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   //3) update passwordChangedAt
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
+
+  //clear password token and expiry date
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await user.save();
