@@ -10,11 +10,9 @@ process.on('uncaughtException', err => {
 });
 
 const app = require('./app');
+const { ENV } = require('./utils/constant');
 
-const DB_CONNECTION = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD,
-);
+const DB_CONNECTION = ENV.DATABASE.replace('<PASSWORD>', ENV.DATABASE_PASSWORD);
 
 //REMOTE DATABASE
 mongoose.connect(DB_CONNECTION).then(() => {
@@ -26,7 +24,7 @@ mongoose.connect(DB_CONNECTION).then(() => {
 //   console.log('DB Connection Successful');
 // });
 
-const PORT = process.env.PORT || 8080;
+const PORT = ENV.PORT || 8080;
 
 const server = app.listen(PORT, () => {
   console.log(`App is up and running on port ${PORT}...`);

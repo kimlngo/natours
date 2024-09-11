@@ -2,12 +2,10 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const TourModel = require('./../../models/tourModel');
 const dotenv = require('dotenv');
+const { ENV } = require('../../utils/constant');
 dotenv.config({ path: './config.env' });
 
-const DB_CONNECTION = process.env.DATABASE.replace(
-  '<PASSWORD>',
-  process.env.DATABASE_PASSWORD,
-);
+const DB_CONNECTION = ENV.DATABASE.replace('<PASSWORD>', ENV.DATABASE_PASSWORD);
 
 const FILE_PATH = './dev-data/data/tours-simple.json';
 const UTF8 = 'utf-8';

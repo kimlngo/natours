@@ -4,12 +4,12 @@ const AppError = require('./error/appError');
 const { errorHandler } = require('./error/error');
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
-const { HTTP_404_NOT_FOUND, DEV } = require('./utils/constant');
+const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 
 const app = express();
 
 // MIDDLEWARES
-if (process.env.NODE_ENV.trim() === DEV) {
+if (ENV.NODE_ENV.trim() === DEV) {
   app.use(morgan('dev'));
 }
 app.use(express.json());

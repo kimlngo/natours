@@ -4,6 +4,7 @@ const {
   PROD,
   HTTP_400_BAD_REQUEST,
   HTTP_401_UNAUTHORIZED,
+  ENV,
 } = require('../utils/constant');
 const AppError = require('./appError');
 
@@ -23,7 +24,7 @@ exports.errorHandler = function (err, req, res, next) {
   err.statusCode = err.statusCode || HTTP_500_INTERNAL_ERROR;
   err.status = err.status || ERROR;
 
-  if (process.env.NODE_ENV.trim() === PROD) {
+  if (ENV.NODE_ENV.trim() === PROD) {
     let errCopy = handleErrors(err);
     sendProdError(errCopy, res);
   } else {
