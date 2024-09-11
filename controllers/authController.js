@@ -1,4 +1,5 @@
 const util = require('util');
+const cryptoUtil = require('./../utils/cryptoUtil');
 const { catchAsync } = require('../error/error');
 const {
   SUCCESS,
@@ -154,7 +155,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   //3) Send the token to user's email
   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email`;
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}\nIf you didn't forget your password, please ignore this email`;
 
   try {
     await emailSender.sendEmail({
@@ -181,4 +182,34 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  //1) Get the token from url
+  const passwordResetToken = req.params.token;
+  const hashToken = cryptoUtil.createHashPasswordResetToken(passwordResetToken);
+
+  //2) if token has not expired and user exists, set the new password
+  const user = await UserModel.findOne({
+    passwordResetToken: hashToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      new AppError('Token is invalid or expired', HTTP_400_BAD_REQUEST),
+    );
+  }
+
+  //3) update passwordChangedAt
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  //4) log user in, send back JWT
+  const token = signToken(user._id);
+  res.status(HTTP_200_OK).json({
+    status: SUCCESS,
+    token,
+  });
+});

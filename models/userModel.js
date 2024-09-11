@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const cryptoUtil = require('./../utils/cryptoUtil');
 const { USER, GUIDE, LEAD_GUIDE, ADMIN } = require('../utils/constant');
 
 const HEX = 'hex';
@@ -61,6 +62,13 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 //instance method - it's available on all document
 userSchema.methods.isCorrectPassword = async function (
   candidatePassword,
@@ -86,10 +94,7 @@ userSchema.methods.changesPasswordAfter = function (jwtTimestamp) {
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString(HEX);
 
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest(HEX);
+  this.passwordResetToken = cryptoUtil.createHashPasswordResetToken(resetToken);
 
   this.passwordResetExpires = Date.now() + TEN_MINUTES_MS;
 

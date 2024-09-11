@@ -30,3 +30,7 @@ exports.DEFAULT_SORT_BY = 'price';
 exports.DEFAULT_PROJECTION = '-__v';
 exports.DEFAULT_PAGE_ONE = 1;
 exports.DEFAULT_LIMIT_PER_PAGE = 10;
+
+//CRYPTO
+exports.HEX = 'hex';
+exports.SHA256 = 'sha256';
