@@ -1,6 +1,7 @@
 const express = require('express');
 const tourCtrl = require('./../controllers/tourController');
 const authCtrl = require('./../controllers/authController');
+const { ADMIN, LEAD_GUIDE } = require('../utils/constant');
 const router = express.Router();
 
 // router.param('id', tourCtrl.validateTourId);
@@ -22,6 +23,10 @@ router
   .route('/:id')
   .get(tourCtrl.getTourById)
   .patch(tourCtrl.updateTour)
-  .delete(tourCtrl.deleteTourByIds);
+  .delete(
+    authCtrl.protect,
+    authCtrl.restrictTo(ADMIN, LEAD_GUIDE),
+    tourCtrl.deleteTourByIds,
+  );
 
 module.exports = router;

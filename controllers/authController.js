@@ -1,11 +1,12 @@
 const util = require('util');
 const { catchAsync } = require('../error/error');
 const {
-  HTTP_201_CREATED,
   SUCCESS,
-  HTTP_400_BAD_REQUEST,
   HTTP_200_OK,
+  HTTP_201_CREATED,
+  HTTP_400_BAD_REQUEST,
   HTTP_401_UNAUTHORIZED,
+  HTTP_403_FORBIDDEN,
 } = require('../utils/constant');
 
 const jwt = require('jsonwebtoken');
@@ -25,6 +26,7 @@ exports.signUp = catchAsync(async function (req, res, next) {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role,
   });
 
   const token = signToken(newUser._id);
@@ -113,3 +115,20 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = curUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    //if user's role is not admin/lead-guide => return error
+
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError(
+          'You do not have permission to perform this action!',
+          HTTP_403_FORBIDDEN,
+        ),
+      );
+    }
+
+    next();
+  };
+};
