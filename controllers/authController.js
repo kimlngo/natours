@@ -15,15 +15,8 @@ const {
 
 const emailSender = require('../utils/email');
 
-const jwt = require('jsonwebtoken');
 const UserModel = require('./../models/userModel');
 const AppError = require('./../error/appError');
-
-const signToken = id => {
-  return jwt.sign({ id }, ENV.JWT_SECRET, {
-    expiresIn: ENV.JWT_EXPIRES_IN,
-  });
-};
 
 exports.signUp = catchAsync(async function (req, res, next) {
   const newUser = await UserModel.create({
@@ -35,15 +28,7 @@ exports.signUp = catchAsync(async function (req, res, next) {
     role: req.body.role,
   });
 
-  const token = signToken(newUser._id);
-
-  res.status(HTTP_201_CREATED).json({
-    status: SUCCESS,
-    token: token,
-    data: {
-      user: newUser,
-    },
-  });
+  createAndSendToken(newUser, HTTP_201_CREATED, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -66,11 +51,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   //3) return the token
-  const token = signToken(user._id);
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    token,
-  });
+  createAndSendToken(user, HTTP_200_OK, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -92,7 +73,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
   //2) verify token
-  const decodedData = await util.promisify(jwt.verify)(token, ENV.JWT_SECRET);
+  const decodedData = await cryptoUtil.decodeJwtToken(token);
 
   //3) check if user still exists
   const curUser = await UserModel.findById(decodedData.id);
@@ -217,42 +198,37 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   await user.save();
 
   //4) log user in, send back JWT
-  const token = signToken(user._id);
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    token,
-  });
+  createAndSendToken(user, HTTP_200_OK, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
   //1) Get user from collection
-  const token = req.headers.authorization.split(' ')[1];
-  const decodedData = await util.promisify(jwt.verify)(token, ENV.JWT_SECRET);
-  const user = await UserModel.findById(decodedData.id).select('+password');
+  //req.user is available because we pre-fix this updatePassword with protect middleware
+  const user = await UserModel.findById(req.user.id).select('+password');
 
   //2) check if posted current password is correct
-  const { oldPassword, newPassword, newPasswordConfirm } = req.body;
-  console.log({ oldPassword, newPassword, newPasswordConfirm });
+  const { passwordCurrent, password, passwordConfirm } = req.body;
 
-  if (!(await user.isCorrectPassword(oldPassword, user.password))) {
+  if (!(await user.isCorrectPassword(passwordCurrent, user.password))) {
     return next(
-      new AppError(
-        'Incorrect current password. Please try again later',
-        HTTP_401_UNAUTHORIZED,
-      ),
+      new AppError('Incorrect current password.', HTTP_401_UNAUTHORIZED),
     );
   }
 
   //3) if so, update the password
-  user.password = newPassword;
-  user.passwordConfirm = newPasswordConfirm;
-
+  user.password = password;
+  user.passwordConfirm = passwordConfirm;
   await user.save();
+  //user.findByIdAndUpdate will NOT work
 
   //4) log user in, send back JWT
-  const newToken = signToken(user._id);
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    token: newToken,
-  });
+  createAndSendToken(user, HTTP_200_OK, res);
 });
+
+function createAndSendToken(user, statusCode, res) {
+  const token = cryptoUtil.signToken(user._id);
+  res.status(statusCode).json({
+    status: SUCCESS,
+    token,
+  });
+}
