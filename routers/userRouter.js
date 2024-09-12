@@ -8,7 +8,7 @@ router.post('/login', authCtrl.login);
 
 router.post('/forgotPassword', authCtrl.forgotPassword);
 router.patch('/resetPassword/:token', authCtrl.resetPassword);
-
+router.post('/updatePassword', authCtrl.updatePassword);
 //prettier-ignore
 router
   .route('/')

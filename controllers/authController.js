@@ -223,3 +223,36 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     token,
   });
 });
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  //1) Get user from collection
+  const token = req.headers.authorization.split(' ')[1];
+  const decodedData = await util.promisify(jwt.verify)(token, ENV.JWT_SECRET);
+  const user = await UserModel.findById(decodedData.id).select('+password');
+
+  //2) check if posted current password is correct
+  const { oldPassword, newPassword, newPasswordConfirm } = req.body;
+  console.log({ oldPassword, newPassword, newPasswordConfirm });
+
+  if (!(await user.isCorrectPassword(oldPassword, user.password))) {
+    return next(
+      new AppError(
+        'Incorrect current password. Please try again later',
+        HTTP_401_UNAUTHORIZED,
+      ),
+    );
+  }
+
+  //3) if so, update the password
+  user.password = newPassword;
+  user.passwordConfirm = newPasswordConfirm;
+
+  await user.save();
+
+  //4) log user in, send back JWT
+  const newToken = signToken(user._id);
+  res.status(HTTP_200_OK).json({
+    status: SUCCESS,
+    token: newToken,
+  });
+});
