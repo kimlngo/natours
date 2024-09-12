@@ -1,6 +1,7 @@
 const {
   SUCCESS,
   HTTP_200_OK,
+  HTTP_204_NO_CONTENT,
   HTTP_400_BAD_REQUEST,
   HTTP_500_INTERNAL_ERROR,
 } = require('./../utils/constant');
@@ -52,6 +53,14 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     data: {
       user,
     },
+  });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await UserModel.findByIdAndUpdate(req.user.id, { active: false });
+  res.status(HTTP_204_NO_CONTENT).json({
+    status: SUCCESS,
+    data: null,
   });
 });
 
