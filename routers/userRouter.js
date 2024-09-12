@@ -9,6 +9,9 @@ router.post('/login', authCtrl.login);
 router.post('/forgotPassword', authCtrl.forgotPassword);
 router.patch('/resetPassword/:token', authCtrl.resetPassword);
 router.patch('/updateMyPassword', authCtrl.protect, authCtrl.updatePassword);
+
+router.patch('/updateMe', authCtrl.protect, userCtrl.updateMe);
+
 //prettier-ignore
 router
   .route('/')

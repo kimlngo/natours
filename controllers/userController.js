@@ -1,10 +1,12 @@
 const {
-  HTTP_INTERNAL_ERROR,
-  HTTP_200_OK,
   SUCCESS,
+  HTTP_200_OK,
+  HTTP_400_BAD_REQUEST,
+  HTTP_500_INTERNAL_ERROR,
 } = require('./../utils/constant');
 const UserModel = require('./../models/userModel');
 const { catchAsync } = require('./../error/error');
+const AppError = require('./../error/appError');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   //EXECUTE query
@@ -20,28 +22,61 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 
+const filterObject = function (obj, ...allowedFields) {
+  const filteredObj = {};
+  allowedFields.forEach(field => {
+    if (obj[field]) filteredObj[field] = obj[field];
+  });
+  return filteredObj;
+};
+
+exports.updateMe = catchAsync(async (req, res, next) => {
+  //1) Create error if you POSTS password data
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError(
+        'This route is not for password updates. Please use /updateMyPassword',
+        HTTP_400_BAD_REQUEST,
+      ),
+    );
+  }
+  //2) filter to only update allowed fields thenu pdate user document
+  const filteredObj = filterObject(req.body, 'name', 'email');
+  const user = await UserModel.findByIdAndUpdate(req.user.id, filteredObj, {
+    new: true,
+    runValidators: true,
+  });
+
+  res.status(HTTP_200_OK).json({
+    status: SUCCESS,
+    data: {
+      user,
+    },
+  });
+});
+
 exports.createNewUser = (req, res) => {
-  res.status(HTTP_INTERNAL_ERROR).json({
+  res.status(HTTP_500_INTERNAL_ERROR).json({
     status: 'error',
     message: 'This route is not yet implemented',
   });
 };
 
 exports.getUserById = (req, res) => {
-  res.status(HTTP_INTERNAL_ERROR).json({
+  res.status(HTTP_500_INTERNAL_ERROR).json({
     status: 'error',
     message: 'This route is not yet implemented',
   });
 };
 exports.updateUser = (req, res) => {
-  res.status(HTTP_INTERNAL_ERROR).json({
+  res.status(HTTP_500_INTERNAL_ERROR).json({
     status: 'error',
     message: 'This route is not yet implemented',
   });
 };
 
 exports.deleteUserById = (req, res) => {
-  res.status(HTTP_INTERNAL_ERROR).json({
+  res.status(HTTP_500_INTERNAL_ERROR).json({
     status: 'error',
     message: 'This route is not yet implemented',
   });
