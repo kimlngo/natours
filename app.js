@@ -1,5 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+
 const AppError = require('./error/appError');
 const { errorHandler } = require('./error/error');
 const tourRouter = require('./routers/tourRouter');
@@ -8,10 +10,21 @@ const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 
 const app = express();
 
-// MIDDLEWARES
+// GLOBAL MIDDLEWARES
 if (ENV.NODE_ENV.trim() === DEV) {
   app.use(morgan('dev'));
 }
+
+//max 100 req/hr/ip
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again later!',
+});
+
+//only applicable to /api
+app.use('/api', limiter);
+
 app.use(express.json());
 
 // Access static files
