@@ -73,7 +73,7 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.pre('save', function (next) {
-  if (!this.isModified(PASSWORD) || this.isNew) next();
+  if (!this.isModified(PASSWORD) || this.isNew) return next();
 
   //The -1000 here is reducing the current time by 1second. This is to ensure that
   //the password reset time is < than the token issued at (iat).

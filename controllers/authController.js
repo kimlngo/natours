@@ -11,6 +11,7 @@ const {
   HTTP_404_NOT_FOUND,
   HTTP_500_INTERNAL_ERROR,
   ENV,
+  PROD,
 } = require('../utils/constant');
 
 const emailSender = require('../utils/email');
@@ -24,7 +25,6 @@ exports.signUp = catchAsync(async function (req, res, next) {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   });
 
@@ -188,7 +188,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     );
   }
 
-  //3) update passwordChangedAt
+  //3) update password & passwordConfirm
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
 
@@ -227,8 +227,30 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
 function createAndSendToken(user, statusCode, res) {
   const token = cryptoUtil.signToken(user._id);
+
+  //implement saving jwt to res's cookie
+  res.cookie('jwt', token, createCookieOpts());
+
+  //Remove password from the output
+  user.password = undefined;
   res.status(statusCode).json({
     status: SUCCESS,
     token,
+    data: {
+      user,
+    },
   });
+}
+
+function createCookieOpts() {
+  const opts = {
+    expires: new Date(
+      Date.now() + ENV.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true, //only be used by browser
+  };
+
+  //only enable secure in Production
+  if (ENV.NODE_ENV.trim() === PROD) opts.secure = true;
+  return opts;
 }
