@@ -1,6 +1,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const AppError = require('./error/appError');
 const { errorHandler } = require('./error/error');
@@ -11,10 +12,14 @@ const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 const app = express();
 
 // GLOBAL MIDDLEWARES
+//development logging
 if (ENV.NODE_ENV.trim() === DEV) {
   app.use(morgan('dev'));
 }
+//Set security HTTP Headers
+app.use(helmet());
 
+//Limit request from same api
 //max 100 req/hr/ip
 const limiter = rateLimit({
   max: 100,
@@ -25,11 +30,17 @@ const limiter = rateLimit({
 //only applicable to /api
 app.use('/api', limiter);
 
-app.use(express.json());
+//body parser, reading data from body into req.body
+app.use(
+  express.json({
+    limit: '10kb',
+  }),
+);
 
 // Access static files
 app.use(express.static(`${__dirname}/public`));
 
+//test middleware
 //add request timestamp to request object using middleware
 app.use((req, res, next) => {
   req.timeStamp = new Date().toISOString();
