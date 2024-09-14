@@ -34,3 +34,6 @@ exports.DEFAULT_LIMIT_PER_PAGE = 10;
 //CRYPTO
 exports.HEX = 'hex';
 exports.SHA256 = 'sha256';
+
+//TIME CONSTANTS
+exports.TEN_MINS_MS = 10 * 60 * 1000;

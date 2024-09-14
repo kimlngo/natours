@@ -2,10 +2,16 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const cryptoUtil = require('./../utils/cryptoUtil');
-const { USER, GUIDE, LEAD_GUIDE, ADMIN } = require('../utils/constant');
+const {
+  USER,
+  GUIDE,
+  LEAD_GUIDE,
+  ADMIN,
+  ENV,
+  TEN_MINS_MS,
+} = require('../utils/constant');
 
 const PASSWORD = 'password';
-const TEN_MINS_IN_MS = 10 * 60 * 1000;
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -52,6 +58,12 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false,
   },
+  failLoginCount: {
+    type: Number,
+    default: 0,
+    select: false,
+  },
+  nextLoginAt: Date,
 });
 
 userSchema.pre(/^find/, function (next) {
@@ -107,9 +119,22 @@ userSchema.methods.createPasswordResetToken = function () {
   const resetToken = cryptoUtil.createRandomResetToken();
 
   this.passwordResetToken = cryptoUtil.createHashPasswordResetToken(resetToken);
-  this.passwordResetExpires = Date.now() + TEN_MINS_IN_MS;
+  this.passwordResetExpires = Date.now() + TEN_MINS_MS;
 
   return resetToken;
+};
+
+//Implement max login attempt
+userSchema.methods.isBelowMaxLoginAttempt = function () {
+  return this.failLoginCount < ENV.MAX_LOGIN_ATTEMPT - 1;
+};
+
+userSchema.methods.setNextLoginAt = function () {
+  this.nextLoginAt = Date.now() + TEN_MINS_MS;
+};
+
+userSchema.methods.isLockDurationPassed = function () {
+  return this.nextLoginAt && Date.now() > this.nextLoginAt;
 };
 
 const UserModel = new mongoose.model('User', userSchema);

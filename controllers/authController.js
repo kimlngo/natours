@@ -1,4 +1,3 @@
-const util = require('util');
 const cryptoUtil = require('./../utils/cryptoUtil');
 const { catchAsync } = require('../error/error');
 const {
@@ -42,15 +41,44 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   //2) check if user exist and password match
-  const user = await UserModel.findOne({ email }).select('+password');
+  const user = await UserModel.findOne({ email })
+    .select('+password')
+    .select('+failLoginCount');
 
-  if (!user || !(await user.isCorrectPassword(password, user.password))) {
+  if (!user) {
     return next(
-      new AppError('Incorrect email or password!', HTTP_401_UNAUTHORIZED),
+      new AppError('Incorrect email or password', HTTP_401_UNAUTHORIZED),
+    );
+  }
+
+  if (user.isBelowMaxLoginAttempt() || user.isLockDurationPassed()) {
+    if (!(await user.isCorrectPassword(password, user.password))) {
+      user.failLoginCount =
+        (user.failLoginCount % (ENV.MAX_LOGIN_ATTEMPT - 1)) + 1;
+
+      await user.save({ validateBeforeSave: false });
+
+      return next(new AppError('Incorrect password!', HTTP_401_UNAUTHORIZED));
+    }
+  } else {
+    //User has attempted 5 times
+    user.setNextLoginAt();
+    await user.save({ validateBeforeSave: false });
+
+    const newDate = user.nextLoginAt.toLocaleDateString();
+    const newTime = user.nextLoginAt.toLocaleTimeString();
+    return next(
+      new AppError(
+        `You has exceeded 5 login attempts, please try again after ${newDate} ${newTime}`,
+        HTTP_401_UNAUTHORIZED,
+      ),
     );
   }
 
   //3) return the token
+  user.failLoginCount = 0;
+  user.nextLoginAt = undefined;
+  await user.save({ validateBeforeSave: false });
   createAndSendToken(user, HTTP_200_OK, res);
 });
 
@@ -233,6 +261,8 @@ function createAndSendToken(user, statusCode, res) {
 
   //Remove password from the output
   user.password = undefined;
+  user.failLoginCount = undefined;
+
   res.status(statusCode).json({
     status: SUCCESS,
     token,
