@@ -64,6 +64,12 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
   nextLoginAt: Date,
+  emailConfirm: {
+    type: Boolean,
+    default: false,
+  },
+  emailConfirmToken: String,
+  emailConfirmExpires: Date,
 });
 
 userSchema.pre(/^find/, function (next) {
@@ -116,12 +122,22 @@ userSchema.methods.changesPasswordAfter = function (jwtTimestamp) {
 };
 
 userSchema.methods.createPasswordResetToken = function () {
-  const resetToken = cryptoUtil.createRandomResetToken();
+  const resetToken = cryptoUtil.createRandomToken();
 
-  this.passwordResetToken = cryptoUtil.createHashPasswordResetToken(resetToken);
+  this.passwordResetToken = cryptoUtil.createHashToken(resetToken);
   this.passwordResetExpires = Date.now() + TEN_MINS_MS;
 
   return resetToken;
+};
+
+//Implement confirm email feature
+userSchema.methods.createConfirmEmailToken = function () {
+  const confirmToken = cryptoUtil.createRandomToken();
+
+  this.emailConfirmToken = cryptoUtil.createHashToken(confirmToken);
+  this.emailConfirmExpires = Date.now() + TEN_MINS_MS;
+
+  return confirmToken;
 };
 
 //Implement max login attempt

@@ -4,10 +4,11 @@ const authCtrl = require('./../controllers/authController');
 const router = express.Router();
 
 router.post('/signup', authCtrl.signUp);
-router.post('/login', authCtrl.login);
+router.post('/login', authCtrl.verifyEmailConfirmation, authCtrl.login);
 
 router.post('/forgotPassword', authCtrl.forgotPassword);
 router.patch('/resetPassword/:token', authCtrl.resetPassword);
+router.patch('/confirmEmail/:token', authCtrl.confirmEmail);
 router.patch('/updateMyPassword', authCtrl.protect, authCtrl.updatePassword);
 
 router.patch('/updateMe', authCtrl.protect, userCtrl.updateMe);

@@ -27,10 +27,60 @@ exports.signUp = catchAsync(async function (req, res, next) {
     role: req.body.role,
   });
 
-  createAndSendToken(newUser, HTTP_201_CREATED, res);
+  //Create confirm email token
+  const confirmToken = newUser.createConfirmEmailToken();
+  await newUser.save({ validateBeforeSave: false });
+
+  //Send the token to user's email
+  const emailOpts = prepareConfirmEmail(req, confirmToken);
+  try {
+    await emailSender.sendEmail(emailOpts);
+
+    res.status(HTTP_200_OK).json({
+      status: SUCCESS,
+      message: 'Email Confirm Token sent to email',
+    });
+  } catch (err) {
+    newUser.emailConfirmToken = undefined;
+    newUser.emailConfirmExpires = undefined;
+    await newUser.save({ validateBeforeSave: false });
+
+    return next(
+      new AppError(
+        'There was an error while sending email. Try again later!',
+        HTTP_500_INTERNAL_ERROR,
+      ),
+    );
+  }
 });
 
-exports.login = catchAsync(async (req, res, next) => {
+exports.confirmEmail = catchAsync(async (req, res, next) => {
+  //Get the token from request
+  const confirmToken = req.params.token;
+  const hashedToken = cryptoUtil.createHashToken(confirmToken);
+
+  //Check if both the token is valid and still within 10 minutes
+  const user = await UserModel.findOne({
+    emailConfirmToken: hashedToken,
+    emailConfirmExpires: { $gt: Date.now() },
+  });
+  //If no => return error
+  if (!user) {
+    return next(
+      new AppError('Token is invalid or expired', HTTP_400_BAD_REQUEST),
+    );
+  }
+  //If yes => log user in
+  user.emailConfirm = true;
+  user.emailConfirmToken = undefined;
+  user.emailConfirmExpires = undefined;
+
+  await user.save({ validateBeforeSave: false });
+
+  createAndSendToken(user, HTTP_200_OK, res);
+});
+
+exports.verifyEmailConfirmation = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   //1) check if email & password are passed in
@@ -40,16 +90,29 @@ exports.login = catchAsync(async (req, res, next) => {
     );
   }
 
-  //2) check if user exist and password match
-  const user = await UserModel.findOne({ email })
+  const user = await UserModel.findOne({
+    email,
+    emailConfirm: true,
+  })
     .select('+password')
     .select('+failLoginCount');
 
   if (!user) {
     return next(
-      new AppError('Incorrect email or password', HTTP_401_UNAUTHORIZED),
+      new AppError('Please confirm email before log in', HTTP_400_BAD_REQUEST),
     );
   }
+
+  //save the user for next middleware login
+  req.user = user;
+  next();
+});
+
+exports.login = catchAsync(async (req, res, next) => {
+  const { password } = req.body;
+
+  //Get user from req
+  const user = req.user;
 
   if (user.isBelowMaxLoginAttempt() || user.isLockDurationPassed()) {
     if (!(await user.isCorrectPassword(password, user.password))) {
@@ -162,7 +225,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   //3) Send the token to user's email
-  const emailOpts = prepareEmail(req, resetToken);
+  const emailOpts = prepareResetPasswordEmail(req, resetToken);
   try {
     await emailSender.sendEmail(emailOpts);
 
@@ -184,7 +247,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-function prepareEmail(req, resetToken) {
+function prepareResetPasswordEmail(req, resetToken) {
   const email = req.body.email;
   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
@@ -197,11 +260,22 @@ function prepareEmail(req, resetToken) {
   };
 }
 
+function prepareConfirmEmail(req, confirmToken) {
+  const email = req.body.email;
+  const confirmURL = `${req.protocol}://${req.get('host')}/api/v1/users/confirmEmail/${confirmToken}`;
+
+  const message = `Confirm your email by submitting a POST request to\n${confirmURL}\n\nIf you did not sign up, please ignore this email`;
+
+  return {
+    email,
+    subject: 'Confirm your email (Valid for 10 minutes)',
+    message,
+  };
+}
 exports.resetPassword = catchAsync(async (req, res, next) => {
   //1) Get the token from url
   const passwordResetToken = req.params.token;
-  const hashedToken =
-    cryptoUtil.createHashPasswordResetToken(passwordResetToken);
+  const hashedToken = cryptoUtil.createHashToken(passwordResetToken);
 
   //2) if token has not expired and user exists, set the new password
   //Find a user with such password reset token and has password expiry date/time beyond current time

@@ -3,11 +3,11 @@ const util = require('util');
 const jwt = require('jsonwebtoken');
 const { ENV, HEX, SHA256 } = require('./constant');
 
-exports.createRandomResetToken = function () {
+exports.createRandomToken = function () {
   return crypto.randomBytes(32).toString(HEX);
 };
 
-exports.createHashPasswordResetToken = function (rawResetToken) {
+exports.createHashToken = function (rawResetToken) {
   return crypto.createHash(SHA256).update(rawResetToken).digest(HEX);
 };
 
