@@ -3,7 +3,6 @@ const { catchAsync } = require('../error/error');
 const {
   SUCCESS,
   HTTP_200_OK,
-  HTTP_201_CREATED,
   HTTP_400_BAD_REQUEST,
   HTTP_401_UNAUTHORIZED,
   HTTP_403_FORBIDDEN,
@@ -32,9 +31,8 @@ exports.signUp = catchAsync(async function (req, res, next) {
   await newUser.save({ validateBeforeSave: false });
 
   //Send the token to user's email
-  const emailOpts = prepareConfirmEmail(req, confirmToken);
   try {
-    await emailSender.sendEmail(emailOpts);
+    await emailSender.sendConfirmEmail(req, confirmToken);
 
     res.status(HTTP_200_OK).json({
       status: SUCCESS,
@@ -128,11 +126,11 @@ exports.login = catchAsync(async (req, res, next) => {
     user.setNextLoginAt();
     await user.save({ validateBeforeSave: false });
 
-    const newDate = user.nextLoginAt.toLocaleDateString();
-    const newTime = user.nextLoginAt.toLocaleTimeString();
+    const nextDate = user.nextLoginAt.toLocaleDateString();
+    const nextTime = user.nextLoginAt.toLocaleTimeString();
     return next(
       new AppError(
-        `You has exceeded 5 login attempts, please try again after ${newDate} ${newTime}`,
+        `You has exceeded 5 login attempts, please try again after ${nextDate} ${nextTime}`,
         HTTP_401_UNAUTHORIZED,
       ),
     );
@@ -225,9 +223,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   //3) Send the token to user's email
-  const emailOpts = prepareResetPasswordEmail(req, resetToken);
   try {
-    await emailSender.sendEmail(emailOpts);
+    await emailSender.sendResetPasswordEmail(req, resetToken);
 
     res.status(HTTP_200_OK).json({
       status: SUCCESS,
@@ -247,31 +244,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   }
 });
 
-function prepareResetPasswordEmail(req, resetToken) {
-  const email = req.body.email;
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
-
-  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}\nIf you didn't forget your password, please ignore this email`;
-
-  return {
-    email,
-    subject: 'Reset Your Password (Valid for 10 minutes)',
-    message,
-  };
-}
-
-function prepareConfirmEmail(req, confirmToken) {
-  const email = req.body.email;
-  const confirmURL = `${req.protocol}://${req.get('host')}/api/v1/users/confirmEmail/${confirmToken}`;
-
-  const message = `Confirm your email by submitting a POST request to\n${confirmURL}\n\nIf you did not sign up, please ignore this email`;
-
-  return {
-    email,
-    subject: 'Confirm your email (Valid for 10 minutes)',
-    message,
-  };
-}
 exports.resetPassword = catchAsync(async (req, res, next) => {
   //1) Get the token from url
   const passwordResetToken = req.params.token;
