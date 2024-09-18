@@ -7,7 +7,7 @@ dotenv.config({ path: './config.env' });
 
 const DB_CONNECTION = ENV.DATABASE.replace('<PASSWORD>', ENV.DATABASE_PASSWORD);
 
-const FILE_PATH = './dev-data/data/tours-simple.json';
+const FILE_PATH = './dev-data/data/tours.json';
 const UTF8 = 'utf-8';
 const IMPORT = '--import';
 const DELETE = '--delete';
