@@ -10,6 +10,7 @@ const AppError = require('./error/appError');
 const { errorHandler } = require('./error/error');
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
+const reviewRouter = require('./routers/reviewerRouter');
 const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 
 const app = express();
@@ -73,6 +74,7 @@ app.use((req, res, next) => {
 // ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // Default 404 Route
 app.all('*', (req, res, next) => {
