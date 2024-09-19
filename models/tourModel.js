@@ -128,6 +128,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+//Virtual Populating
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 //DOCUMENT middleware
 //save only works for .save() and .create() operation. It won't work with insertMany
 tourSchema.pre('save', function (next) {
