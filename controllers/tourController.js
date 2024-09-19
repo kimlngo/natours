@@ -84,7 +84,7 @@ exports.updateTour = catchAsync(async function (req, res, next) {
     },
   );
 
-  if (!tour) {
+  if (!updatedTour) {
     return next(
       new AppError(
         `No tour found with id '${req.params.id}'`,
