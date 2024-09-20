@@ -2,8 +2,15 @@ const reviewModel = require('./../models/reviewModel');
 const { catchAsync } = require('./../error/error');
 const { SUCCESS, HTTP_200_OK, HTTP_201_CREATED } = require('../utils/constant');
 
+const handlerFactory = require('./handlerFactory');
+const ReviewModel = require('./../models/reviewModel');
+
 exports.getAllReviews = catchAsync(async function (req, res, next) {
-  const reviews = await reviewModel.find();
+  let filter = {};
+
+  if (req.params.tourId) filter = { tour: req.params.tourId };
+
+  const reviews = await reviewModel.find(filter);
 
   res.status(HTTP_200_OK).json({
     status: SUCCESS,
@@ -31,3 +38,5 @@ exports.createNewReview = catchAsync(async function (req, res, next) {
     },
   });
 });
+
+exports.deleteReviews = handlerFactory.deleteByIds(ReviewModel);

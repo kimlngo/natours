@@ -4,10 +4,10 @@ const AppError = require('./../error/appError');
 const {
   HTTP_200_OK,
   HTTP_201_CREATED,
-  HTTP_204_NO_CONTENT,
   HTTP_404_NOT_FOUND,
   SUCCESS,
 } = require('./../utils/constant');
+const handlerFactory = require('./handlerFactory');
 
 const DataAccessImpl = require('./../data-access/dataAccess');
 
@@ -104,24 +104,7 @@ exports.updateTour = catchAsync(async function (req, res, next) {
   });
 });
 
-exports.deleteTourByIds = catchAsync(async function (req, res, next) {
-  const listIds = req.params.id.split(',');
-  const result = await TourModel.deleteMany({ _id: { $in: listIds } });
-
-  if (result?.acknowledged && result?.deletedCount === 0) {
-    return next(
-      new AppError(
-        `No tour found with id '${req.params.id}'`,
-        HTTP_404_NOT_FOUND,
-      ),
-    );
-  }
-
-  res.status(HTTP_204_NO_CONTENT).json({
-    status: SUCCESS,
-    data: null,
-  });
-});
+exports.deleteTourByIds = handlerFactory.deleteByIds(TourModel);
 
 exports.getTourStats = catchAsync(async function (req, res, next) {
   const stats = await TourModel.aggregate([

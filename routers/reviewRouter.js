@@ -2,7 +2,7 @@ const express = require('express');
 const reviewCtrl = require('../controllers/reviewController');
 const authCtrl = require('../controllers/authController');
 const router = express.Router({ mergeParams: true });
-
+const { USER } = require('../utils/constant');
 //all review routes: GET All review, POST new review
 
 //Simple nested routes
@@ -13,8 +13,9 @@ router
   .get(reviewCtrl.getAllReviews)
   .post(
     authCtrl.protect,
-    authCtrl.restrictTo('user'),
+    authCtrl.restrictTo(USER),
     reviewCtrl.createNewReview,
   );
 
+router.route('/:id').delete(reviewCtrl.deleteReviews);
 module.exports = router;

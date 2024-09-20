@@ -7,6 +7,7 @@ const {
 } = require('./../utils/constant');
 const UserModel = require('./../models/userModel');
 const { catchAsync } = require('./../error/error');
+const handlerFactory = require('./handlerFactory');
 const AppError = require('./../error/appError');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
@@ -84,9 +85,4 @@ exports.updateUser = (req, res) => {
   });
 };
 
-exports.deleteUserById = (req, res) => {
-  res.status(HTTP_500_INTERNAL_ERROR).json({
-    status: 'error',
-    message: 'This route is not yet implemented',
-  });
-};
+exports.deleteUserById = handlerFactory.deleteByIds(UserModel);
