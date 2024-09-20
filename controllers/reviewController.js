@@ -15,6 +15,13 @@ exports.getAllReviews = catchAsync(async function (req, res, next) {
 });
 
 exports.createNewReview = catchAsync(async function (req, res, next) {
+  if (!req.body.tour) {
+    req.body.tour = req.params.tourId;
+  }
+  if (!req.body.user) {
+    req.body.user = req.user.id; //obtained from authCtrl.protect
+  }
+
   const newReview = await reviewModel.create(req.body);
 
   res.status(HTTP_201_CREATED).json({
