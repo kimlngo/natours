@@ -1,11 +1,14 @@
 const express = require('express');
 const tourCtrl = require('./../controllers/tourController');
 const authCtrl = require('./../controllers/authController');
-const reviewCtrl = require('./../controllers/reviewController');
+const reviewRouter = require('./reviewRouter');
 const { ADMIN, LEAD_GUIDE } = require('../utils/constant');
 const router = express.Router();
 
 // router.param('id', tourCtrl.validateTourId);
+
+//forward the /api/v1/tours/:tourId/reviews to reviewRouter
+router.use('/:tourId/reviews', reviewRouter);
 
 //alias for top 5 best tours
 router
@@ -28,16 +31,6 @@ router
     authCtrl.protect,
     authCtrl.restrictTo(ADMIN, LEAD_GUIDE),
     tourCtrl.deleteTourByIds,
-  );
-
-//Simple nested routes
-//{url}/api/v1/tour/13412aefea/reviews
-router
-  .route('/:tourId/reviews')
-  .post(
-    authCtrl.protect,
-    authCtrl.restrictTo('user'),
-    reviewCtrl.createNewReview,
   );
 
 module.exports = router;

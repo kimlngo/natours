@@ -10,7 +10,7 @@ const AppError = require('./error/appError');
 const { errorHandler } = require('./error/error');
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
-const reviewRouter = require('./routers/reviewerRouter');
+const reviewRouter = require('./routers/reviewRouter');
 const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 
 const app = express();
