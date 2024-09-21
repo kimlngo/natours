@@ -58,6 +58,12 @@ exports.createNewUser = (req, res) => {
   });
 };
 
+//getMe implementation
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
 exports.getAllUsers = handlerFactory.getAll(UserModel);
 
 exports.getUserById = handlerFactory.getOne(UserModel);

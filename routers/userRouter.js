@@ -11,6 +11,7 @@ router.patch('/resetPassword/:token', authCtrl.resetPassword);
 router.patch('/confirmEmail/:token', authCtrl.confirmEmail);
 router.patch('/updateMyPassword', authCtrl.protect, authCtrl.updatePassword);
 
+router.get('/me', authCtrl.protect, userCtrl.getMe, userCtrl.getUserById);
 router.patch('/updateMe', authCtrl.protect, userCtrl.updateMe);
 router.delete('/deleteMe', authCtrl.protect, userCtrl.deleteMe);
 //prettier-ignore
