@@ -1,6 +1,7 @@
 const express = require('express');
 const userCtrl = require('./../controllers/userController');
 const authCtrl = require('./../controllers/authController');
+const { ADMIN } = require('../utils/constant');
 const router = express.Router();
 
 router.post('/signup', authCtrl.signUp);
@@ -9,11 +10,18 @@ router.post('/login', authCtrl.verifyEmailConfirmation, authCtrl.login);
 router.post('/forgotPassword', authCtrl.forgotPassword);
 router.patch('/resetPassword/:token', authCtrl.resetPassword);
 router.patch('/confirmEmail/:token', authCtrl.confirmEmail);
-router.patch('/updateMyPassword', authCtrl.protect, authCtrl.updatePassword);
 
-router.get('/me', authCtrl.protect, userCtrl.getMe, userCtrl.getUserById);
-router.patch('/updateMe', authCtrl.protect, userCtrl.updateMe);
-router.delete('/deleteMe', authCtrl.protect, userCtrl.deleteMe);
+//protect all routes after this middleware - NICE TRICK
+router.use(authCtrl.protect);
+
+router.patch('/updateMyPassword', authCtrl.updatePassword);
+
+router.get('/me', userCtrl.getMe, userCtrl.getUserById);
+router.patch('/updateMe', userCtrl.updateMe);
+router.delete('/deleteMe', userCtrl.deleteMe);
+
+//restric all routes after this middleware
+router.use(authCtrl.restrictTo(ADMIN));
 //prettier-ignore
 router
   .route('/')
