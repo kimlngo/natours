@@ -21,22 +21,16 @@ exports.getAllReviews = catchAsync(async function (req, res, next) {
   });
 });
 
-exports.createNewReview = catchAsync(async function (req, res, next) {
+exports.setTourUserIds = (req, res, next) => {
   if (!req.body.tour) {
     req.body.tour = req.params.tourId;
   }
   if (!req.body.user) {
     req.body.user = req.user.id; //obtained from authCtrl.protect
   }
+  next();
+};
 
-  const newReview = await reviewModel.create(req.body);
-
-  res.status(HTTP_201_CREATED).json({
-    status: SUCCESS,
-    data: {
-      review: newReview,
-    },
-  });
-});
-
+exports.createReview = handlerFactory.createOne(ReviewModel);
+exports.updateReviews = handlerFactory.updateOne(ReviewModel);
 exports.deleteReviews = handlerFactory.deleteByIds(ReviewModel);

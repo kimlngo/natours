@@ -14,8 +14,12 @@ router
   .post(
     authCtrl.protect,
     authCtrl.restrictTo(USER),
-    reviewCtrl.createNewReview,
+    reviewCtrl.setTourUserIds,
+    reviewCtrl.createReview,
   );
 
-router.route('/:id').delete(reviewCtrl.deleteReviews);
+router
+  .route('/:id')
+  .patch(reviewCtrl.updateReviews)
+  .delete(reviewCtrl.deleteReviews);
 module.exports = router;

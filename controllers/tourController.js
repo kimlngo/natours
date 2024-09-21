@@ -66,43 +66,9 @@ exports.getTourById = catchAsync(async function (req, res, next) {
   });
 });
 
-exports.createNewTour = catchAsync(async function (req, res, next) {
-  const newTour = await TourModel.create(req.body);
+exports.createNewTour = handlerFactory.createOne(TourModel);
 
-  res.status(HTTP_201_CREATED).json({
-    status: SUCCESS,
-    data: {
-      tour: newTour,
-    },
-  });
-});
-
-exports.updateTour = catchAsync(async function (req, res, next) {
-  const updatedTour = await TourModel.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true, //return new document
-      runValidators: true,
-    },
-  );
-
-  if (!updatedTour) {
-    return next(
-      new AppError(
-        `No tour found with id '${req.params.id}'`,
-        HTTP_404_NOT_FOUND,
-      ),
-    );
-  }
-
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    data: {
-      tour: updatedTour,
-    },
-  });
-});
+exports.updateTour = handlerFactory.updateOne(TourModel);
 
 exports.deleteTourByIds = handlerFactory.deleteByIds(TourModel);
 

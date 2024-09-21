@@ -78,11 +78,8 @@ exports.getUserById = (req, res) => {
     message: 'This route is not yet implemented',
   });
 };
-exports.updateUser = (req, res) => {
-  res.status(HTTP_500_INTERNAL_ERROR).json({
-    status: 'error',
-    message: 'This route is not yet implemented',
-  });
-};
+
+//Do NOT update passwords with this
+exports.updateUser = handlerFactory.updateOne(UserModel);
 
 exports.deleteUserById = handlerFactory.deleteByIds(UserModel);

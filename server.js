@@ -5,6 +5,7 @@ dotenv.config({ path: './config.env' });
 //Handle Uncaught Exception
 process.on('uncaughtException', err => {
   console.log('UNHANDLED EXCEPTION!!! 💥');
+  console.log('Stack', err.stack);
   console.log(`Error: ${err}`);
   process.exit(1);
 });
