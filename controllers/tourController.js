@@ -1,15 +1,7 @@
 const TourModel = require('./../models/tourModel');
 const { catchAsync } = require('./../error/error');
-const AppError = require('./../error/appError');
-const {
-  HTTP_200_OK,
-  HTTP_201_CREATED,
-  HTTP_404_NOT_FOUND,
-  SUCCESS,
-} = require('./../utils/constant');
+const { HTTP_200_OK, SUCCESS } = require('./../utils/constant');
 const handlerFactory = require('./handlerFactory');
-
-const DataAccessImpl = require('./../data-access/dataAccess');
 
 exports.aliasBestFiveTours = function (req, res, next) {
   req.query.limit = '5';
@@ -19,51 +11,11 @@ exports.aliasBestFiveTours = function (req, res, next) {
   next();
 };
 
-exports.getAllTours = catchAsync(async function (req, res, next) {
-  const rawQuery = req.query;
-  const dataAccessImpl = new DataAccessImpl(TourModel.find(), rawQuery);
+exports.getAllTours = handlerFactory.getAll(TourModel);
 
-  //query preparation
-  //prettier-ignore
-  dataAccessImpl.filter()
-                  .sort()
-                  .project()
-                  .paginate();
-
-  //EXECUTE query
-  const tours = await dataAccessImpl.query;
-
-  //SEND Response
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
-
-exports.getTourById = catchAsync(async function (req, res, next) {
-  const tour = await TourModel.findById(req.params.id).populate({
-    path: 'reviews',
-    select: '-__v',
-  });
-  // const tour = await Tour.findOne({_id: req.params.id});
-
-  if (!tour) {
-    return next(
-      new AppError(
-        `No tour found with id '${req.params.id}'`,
-        HTTP_404_NOT_FOUND,
-      ),
-    );
-  }
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    data: {
-      tour,
-    },
-  });
+exports.getTourById = handlerFactory.getOne(TourModel, {
+  path: 'reviews',
+  select: '-__v',
 });
 
 exports.createNewTour = handlerFactory.createOne(TourModel);

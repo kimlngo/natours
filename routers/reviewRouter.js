@@ -20,6 +20,7 @@ router
 
 router
   .route('/:id')
+  .get(reviewCtrl.getReview)
   .patch(reviewCtrl.updateReviews)
   .delete(reviewCtrl.deleteReviews);
 module.exports = router;

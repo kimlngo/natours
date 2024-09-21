@@ -10,20 +10,6 @@ const { catchAsync } = require('./../error/error');
 const handlerFactory = require('./handlerFactory');
 const AppError = require('./../error/appError');
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  //EXECUTE query
-  const users = await UserModel.find();
-
-  //SEND Response
-  res.status(HTTP_200_OK).json({
-    status: SUCCESS,
-    results: users.length,
-    data: {
-      users,
-    },
-  });
-});
-
 const filterObject = function (obj, ...allowedFields) {
   const filteredObj = {};
   allowedFields.forEach(field => {
@@ -68,16 +54,13 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 exports.createNewUser = (req, res) => {
   res.status(HTTP_500_INTERNAL_ERROR).json({
     status: 'error',
-    message: 'This route is not yet implemented',
+    message: 'This route is not defined. Please use /signup instead',
   });
 };
 
-exports.getUserById = (req, res) => {
-  res.status(HTTP_500_INTERNAL_ERROR).json({
-    status: 'error',
-    message: 'This route is not yet implemented',
-  });
-};
+exports.getAllUsers = handlerFactory.getAll(UserModel);
+
+exports.getUserById = handlerFactory.getOne(UserModel);
 
 //Do NOT update passwords with this
 exports.updateUser = handlerFactory.updateOne(UserModel);
