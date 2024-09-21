@@ -3,6 +3,7 @@ const { catchAsync } = require('../error/error');
 const {
   SUCCESS,
   HTTP_200_OK,
+  HTTP_201_CREATED,
   HTTP_400_BAD_REQUEST,
   HTTP_401_UNAUTHORIZED,
   HTTP_403_FORBIDDEN,
@@ -23,34 +24,45 @@ exports.signUp = catchAsync(async function (req, res, next) {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    role: req.body.role,
   });
 
-  //Create confirm email token
-  const confirmToken = newUser.createConfirmEmailToken();
-  await newUser.save({ validateBeforeSave: false });
-
-  //Send the token to user's email
-  try {
-    await emailSender.sendConfirmEmail(req, confirmToken);
-
-    res.status(HTTP_200_OK).json({
-      status: SUCCESS,
-      message: 'Email Confirm Token sent to email',
-    });
-  } catch (err) {
-    newUser.emailConfirmToken = undefined;
-    newUser.emailConfirmExpires = undefined;
-    await newUser.save({ validateBeforeSave: false });
-
-    return next(
-      new AppError(
-        'There was an error while sending email. Try again later!',
-        HTTP_500_INTERNAL_ERROR,
-      ),
-    );
-  }
+  createAndSendToken(newUser, HTTP_201_CREATED, res);
 });
+
+// exports.signUp = catchAsync(async function (req, res, next) {
+//   const newUser = await UserModel.create({
+//     name: req.body.name,
+//     email: req.body.email,
+//     password: req.body.password,
+//     passwordConfirm: req.body.passwordConfirm,
+//     role: req.body.role,
+//   });
+
+//   //Create confirm email token
+//   const confirmToken = newUser.createConfirmEmailToken();
+//   await newUser.save({ validateBeforeSave: false });
+
+//   //Send the token to user's email
+//   try {
+//     await emailSender.sendConfirmEmail(req, confirmToken);
+
+//     res.status(HTTP_200_OK).json({
+//       status: SUCCESS,
+//       message: 'Email Confirm Token sent to email',
+//     });
+//   } catch (err) {
+//     newUser.emailConfirmToken = undefined;
+//     newUser.emailConfirmExpires = undefined;
+//     await newUser.save({ validateBeforeSave: false });
+
+//     return next(
+//       new AppError(
+//         'There was an error while sending email. Try again later!',
+//         HTTP_500_INTERNAL_ERROR,
+//       ),
+//     );
+//   }
+// });
 
 exports.confirmEmail = catchAsync(async (req, res, next) => {
   //Get the token from request
@@ -107,41 +119,63 @@ exports.verifyEmailConfirmation = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  const { password } = req.body;
+  const { email, password } = req.body;
 
-  //Get user from req
-  const user = req.user;
-
-  if (user.isBelowMaxLoginAttempt() || user.isLockDurationPassed()) {
-    if (!(await user.isCorrectPassword(password, user.password))) {
-      user.failLoginCount =
-        (user.failLoginCount % (ENV.MAX_LOGIN_ATTEMPT - 1)) + 1;
-
-      await user.save({ validateBeforeSave: false });
-
-      return next(new AppError('Incorrect password!', HTTP_401_UNAUTHORIZED));
-    }
-  } else {
-    //User has attempted 5 times
-    user.setNextLoginAt();
-    await user.save({ validateBeforeSave: false });
-
-    const nextDate = user.nextLoginAt.toLocaleDateString();
-    const nextTime = user.nextLoginAt.toLocaleTimeString();
+  // 1) Check if email and password exist
+  if (!email || !password) {
     return next(
-      new AppError(
-        `You has exceeded 5 login attempts, please try again after ${nextDate} ${nextTime}`,
-        HTTP_401_UNAUTHORIZED,
-      ),
+      new AppError('Please provide email and password!', HTTP_400_BAD_REQUEST),
+    );
+  }
+  // 2) Check if user exists && password is correct
+  const user = await UserModel.findOne({ email }).select('+password');
+
+  if (!user || !(await user.isCorrectPassword(password, user.password))) {
+    return next(
+      new AppError('Incorrect email or password', HTTP_401_UNAUTHORIZED),
     );
   }
 
-  //3) return the token
-  user.failLoginCount = 0;
-  user.nextLoginAt = undefined;
-  await user.save({ validateBeforeSave: false });
-  createAndSendToken(user, HTTP_200_OK, res);
+  // 3) If everything ok, send token to client
+  createAndSendToken(user, 200, res);
 });
+
+// exports.login = catchAsync(async (req, res, next) => {
+//   const { password } = req.body;
+
+//   //Get user from req
+//   const user = req.user;
+
+//   if (user.isBelowMaxLoginAttempt() || user.isLockDurationPassed()) {
+//     if (!(await user.isCorrectPassword(password, user.password))) {
+//       user.failLoginCount =
+//         (user.failLoginCount % (ENV.MAX_LOGIN_ATTEMPT - 1)) + 1;
+
+//       await user.save({ validateBeforeSave: false });
+
+//       return next(new AppError('Incorrect password!', HTTP_401_UNAUTHORIZED));
+//     }
+//   } else {
+//     //User has attempted 5 times
+//     user.setNextLoginAt();
+//     await user.save({ validateBeforeSave: false });
+
+//     const nextDate = user.nextLoginAt.toLocaleDateString();
+//     const nextTime = user.nextLoginAt.toLocaleTimeString();
+//     return next(
+//       new AppError(
+//         `You has exceeded 5 login attempts, please try again after ${nextDate} ${nextTime}`,
+//         HTTP_401_UNAUTHORIZED,
+//       ),
+//     );
+//   }
+
+//   //3) return the token
+//   user.failLoginCount = 0;
+//   user.nextLoginAt = undefined;
+//   await user.save({ validateBeforeSave: false });
+//   createAndSendToken(user, HTTP_200_OK, res);
+// });
 
 exports.protect = catchAsync(async (req, res, next) => {
   //1) check if token exists in req headers
