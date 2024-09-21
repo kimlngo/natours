@@ -105,6 +105,7 @@ exports.getAll = Model =>
                     .paginate();
 
     //EXECUTE query
+    // const doc = await dataAccessImpl.query.explain();
     const doc = await dataAccessImpl.query;
 
     //SEND Response
