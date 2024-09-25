@@ -11,10 +11,9 @@ const DataAccessImpl = require('./../data-access/dataAccess');
 
 exports.deleteByIds = Model =>
   catchAsync(async function (req, res, next) {
-    const listIds = req.params.id.split(',');
-    const result = await Model.deleteMany({ _id: { $in: listIds } });
+    const result = await Model.findByIdAndDelete(req.params.id);
 
-    if (result?.acknowledged && result?.deletedCount === 0) {
+    if (!result) {
       return next(
         new AppError(
           `No document found with id '${req.params.id}'`,
