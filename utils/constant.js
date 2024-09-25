@@ -37,3 +37,10 @@ exports.SHA256 = 'sha256';
 
 //TIME CONSTANTS
 exports.TEN_MINS_MS = 10 * 60 * 1000;
+
+//DISTANT CONSTANTS
+exports.MI = 'mi';
+exports.MI_DIVISOR = 3963.2;
+
+exports.KM = 'km';
+exports.KM_DIVISOR = 6378.1;
