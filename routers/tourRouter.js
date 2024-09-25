@@ -33,10 +33,13 @@ router
     tourCtrl.createNewTour,
   );
 
-//tours-within/:distance/center/:latlgn/unit/:unit
+//tours-within/:distance/center/:latlng/unit/:unit
 router
-  .route('/tours-within/:distance/center/:latlgn/unit/:unit')
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
   .get(tourCtrl.getToursWithin);
+
+//distances/34.11,-118.11/unit/mi
+router.route('/distances/:latlng/unit/:unit').get(tourCtrl.getDistances);
 
 router
   .route('/:id')

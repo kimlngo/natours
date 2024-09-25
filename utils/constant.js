@@ -44,3 +44,6 @@ exports.MI_DIVISOR = 3963.2;
 
 exports.KM = 'km';
 exports.KM_DIVISOR = 6378.1;
+
+exports.M_TO_MI = 0.000621371;
+exports.M_TO_KM = 0.001;

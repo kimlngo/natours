@@ -189,7 +189,13 @@ tourSchema.post(/^find/, function (docs, next) {
 
 //AGGREGATION Middleware
 tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  const firstStage = this.pipeline()[0];
+
+  //only add this unshift stage if 1st stage is not $geoNear
+  //otherwise, ignore this $match
+  if (!firstStage['$geoNear']) {
+    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  }
   next();
 });
 const TourModel = new mongoose.model('Tour', tourSchema); //convention: to name mongoose model with first capital letter
