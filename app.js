@@ -86,6 +86,18 @@ app.get('/', (req, res) => {
     user: 'Kim Long Ngo',
   });
 });
+
+app.get('/overview', (req, res) => {
+  res.status(HTTP_200_OK).render('overview', {
+    title: 'All Tours',
+  });
+});
+
+app.get('/tour', (req, res) => {
+  res.status(HTTP_200_OK).render('tour', {
+    title: 'The Forest Hiker',
+  });
+});
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
