@@ -81,7 +81,10 @@ app.use((req, res, next) => {
 
 // ROUTES
 app.get('/', (req, res) => {
-  res.status(HTTP_200_OK).render('base');
+  res.status(HTTP_200_OK).render('base', {
+    tour: 'The Forest Hiker',
+    user: 'Kim Long Ngo',
+  });
 });
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
