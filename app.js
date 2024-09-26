@@ -12,12 +12,8 @@ const { errorHandler } = require('./error/error');
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
 const reviewRouter = require('./routers/reviewRouter');
-const {
-  HTTP_404_NOT_FOUND,
-  DEV,
-  ENV,
-  HTTP_200_OK,
-} = require('./utils/constant');
+const viewRouter = require('./routers/viewRouter');
+const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 
 const app = express();
 app.set('view engine', 'pug');
@@ -80,24 +76,7 @@ app.use((req, res, next) => {
 });
 
 // ROUTES
-app.get('/', (req, res) => {
-  res.status(HTTP_200_OK).render('base', {
-    tour: 'The Forest Hiker',
-    user: 'Kim Long Ngo',
-  });
-});
-
-app.get('/overview', (req, res) => {
-  res.status(HTTP_200_OK).render('overview', {
-    title: 'All Tours',
-  });
-});
-
-app.get('/tour', (req, res) => {
-  res.status(HTTP_200_OK).render('tour', {
-    title: 'The Forest Hiker',
-  });
-});
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
