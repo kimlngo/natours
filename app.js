@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -11,9 +12,19 @@ const { errorHandler } = require('./error/error');
 const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
 const reviewRouter = require('./routers/reviewRouter');
-const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
+const {
+  HTTP_404_NOT_FOUND,
+  DEV,
+  ENV,
+  HTTP_200_OK,
+} = require('./utils/constant');
 
 const app = express();
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
+// Access static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // GLOBAL MIDDLEWARES
 //development logging
@@ -61,9 +72,6 @@ app.use(
   }),
 );
 
-// Access static files
-app.use(express.static(`${__dirname}/public`));
-
 //test middleware
 //add request timestamp to request object using middleware
 app.use((req, res, next) => {
@@ -72,6 +80,9 @@ app.use((req, res, next) => {
 });
 
 // ROUTES
+app.get('/', (req, res) => {
+  res.status(HTTP_200_OK).render('base');
+});
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
