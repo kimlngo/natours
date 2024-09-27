@@ -24,10 +24,15 @@ exports.getTourDetail = catchAsync(async function (req, res, next) {
     fields: 'review rating user',
   });
   //2) Build Template
-
   //3) Render Template using data from (1)
-  res.status(HTTP_200_OK).render(TOUR_PUG, {
-    title: tour.name,
-    tour,
-  });
+  res
+    .status(HTTP_200_OK)
+    // .set(
+    //   'Content-Security-Policy',
+    //   "default-src 'self' https://*.mapbox.com ;base-uri 'self';block-all-mixed-content;font-src 'self' https: data:;frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src https://cdnjs.cloudflare.com https://api.mapbox.com 'self' blob: ;script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests;",
+    // )
+    .render(TOUR_PUG, {
+      title: `${tour.name} Tour`,
+      tour,
+    });
 });
