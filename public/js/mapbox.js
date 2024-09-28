@@ -1,8 +1,4 @@
-let locations;
-
-if (document.getElementById('map')) {
-  locations = JSON.parse(document.getElementById('map').dataset.locations);
-
+export const displayMap = locations => {
   mapboxgl.accessToken =
     'pk.eyJ1Ijoia2ltbG5nbyIsImEiOiJjbTFsMTQ2azgwNDN0MmlxNnU2dzRuYnJoIn0.VAc7yYHOISXJxALkiEuMcQ';
 
@@ -48,4 +44,4 @@ if (document.getElementById('map')) {
       right: 100,
     },
   });
-}
+};

@@ -185,6 +185,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   if (!token) {
@@ -220,6 +222,30 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //5) valid token, GRANT ACCESS TO PROTECTED ROUTE
   req.user = curUser;
+  next();
+});
+
+//Only for render pages, no errors!
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  if (req.cookies.jwt) {
+    //1) verify token
+    const decodedData = await cryptoUtil.decodeJwtToken(req.cookies.jwt);
+
+    //2) check if user still exists
+    const curUser = await UserModel.findById(decodedData.id);
+    if (!curUser) {
+      return next();
+    }
+    //3) check if user changed password after the token was issued
+    if (curUser.changesPasswordAfter(decodedData.iat)) {
+      return next();
+    }
+
+    //4) There is a logged in user
+    //this user will be avail in pug template
+    res.locals.user = curUser;
+    return next();
+  }
   next();
 });
 
