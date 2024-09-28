@@ -21,3 +21,21 @@ export async function login(email, password) {
     showAlert('error', e.response.data.message);
   }
 }
+
+export async function logout() {
+  try {
+    const res = await axios({
+      method: 'GET',
+      url: 'http://localhost:8080/api/v1/users/logout',
+    });
+
+    if (res.data.status === 'success') {
+      showAlert('success', 'Logged out successfully');
+      window.setTimeout(() => {
+        location.reload(true);
+      }, 1500);
+    }
+  } catch (err) {
+    showAlert('error', 'Error logging out! Try again.');
+  }
+}
