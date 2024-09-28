@@ -4,6 +4,7 @@ const { HTTP_200_OK } = require('./../utils/constant');
 
 const OVERVIEW_PUG = 'overview';
 const TOUR_PUG = 'tour';
+const LOGIN_PUG = 'login';
 
 exports.getOverview = catchAsync(async function (req, res, next) {
   //1) Get tour data from collection
@@ -36,3 +37,9 @@ exports.getTourDetail = catchAsync(async function (req, res, next) {
       tour,
     });
 });
+
+exports.getLoginForm = function (req, res, next) {
+  res.status(HTTP_200_OK).render(LOGIN_PUG, {
+    title: 'Log into your account',
+  });
+};
