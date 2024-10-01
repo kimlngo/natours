@@ -14,6 +14,9 @@ const VALIDATION_ERROR = 'ValidationError';
 const DUPLICATED_FIELD_CODE = 11000;
 const INVALID_TOKEN_ERR = 'JsonWebTokenError';
 const EXPIRED_TOKEN_ERR = 'TokenExpiredError';
+const GENERIC_ERR_TITLE = 'Something went wrong!';
+const GENERIC_ERR_MSG = 'Some wrong happened. Please try again later!';
+
 exports.catchAsync = function (appliedFn) {
   return (req, res, next) => {
     appliedFn(req, res, next).catch(next);
@@ -24,38 +27,18 @@ exports.errorHandler = function (err, req, res, next) {
   err.statusCode = err.statusCode || HTTP_500_INTERNAL_ERROR;
   err.status = err.status || ERROR;
 
-  if (ENV.NODE_ENV.trim() === PROD) {
-    let errCopy = handleErrors(err);
-    sendProdError(errCopy, res);
-  } else {
-    sendDevError(err, res);
-  }
+  ENV.NODE_ENV.trim() === PROD
+    ? sendProdError(err, req, res)
+    : sendDevError(err, req, res);
 };
 
-function sendDevError(err, res) {
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message,
-    stack: err.stack,
-    error: err,
-  });
-}
+function sendProdError(err, req, res) {
+  const error = handleErrors(err);
 
-function sendProdError(err, res) {
-  //Operational error ==> trusted, send back to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
-    //Programming or other unknown error: don't leak error details
-  } else {
-    console.error('ERROR 💥', err);
-    res.status(HTTP_500_INTERNAL_ERROR).json({
-      status: ERROR,
-      message: 'Some errors happened. Please try again later!',
-    });
-  }
+  //A)API
+  if (req.originalUrl.startsWith('/api')) handleProdAPIError(error, res);
+  //B)RENDER Website
+  else handleProdNonAPIError(error, res);
 }
 
 function handleErrors(err) {
@@ -105,4 +88,53 @@ function handleExpiredTokenError() {
     'Your token has expired. Please login again!',
     HTTP_401_UNAUTHORIZED,
   );
+}
+
+function handleProdAPIError(err, res) {
+  //Operational error ==> trusted, send back to client
+  if (err.isOperational) {
+    res.status(err.statusCode).json({
+      status: err.status,
+      message: err.message,
+    });
+    //Programming or other unknown error: don't leak error details
+  } else {
+    res.status(HTTP_500_INTERNAL_ERROR).json({
+      status: ERROR,
+      message: GENERIC_ERR_MSG,
+    });
+  }
+}
+
+function handleProdNonAPIError(err, res) {
+  if (err.isOperational) {
+    res.status(err.statusCode).render('error', {
+      title: GENERIC_ERR_TITLE,
+      msg: err.message,
+    });
+    //Programming or other unknown error: don't leak error details
+  } else {
+    res.status(err.statusCode).render('error', {
+      title: GENERIC_ERR_TITLE,
+      msg: GENERIC_ERR_MSG,
+    });
+  }
+}
+
+function sendDevError(err, req, res) {
+  //API
+  if (req.originalUrl.startsWith('/api')) {
+    res.status(err.statusCode).json({
+      status: err.status,
+      message: err.message,
+      stack: err.stack,
+      error: err,
+    });
+  } else {
+    //RENDERED Website
+    res.status(err.statusCode).render('error', {
+      title: GENERIC_ERR_TITLE,
+      msg: err.message,
+    });
+  }
 }

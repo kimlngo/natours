@@ -1,6 +1,7 @@
 const TourModel = require('./../models/tourModel');
 const { catchAsync } = require('./../error/error');
-const { HTTP_200_OK } = require('./../utils/constant');
+const { HTTP_200_OK, HTTP_404_NOT_FOUND } = require('./../utils/constant');
+const AppError = require('../error/appError');
 
 const OVERVIEW_PUG = 'overview';
 const TOUR_PUG = 'tour';
@@ -24,6 +25,13 @@ exports.getTourDetail = catchAsync(async function (req, res, next) {
     path: 'reviews',
     fields: 'review rating user',
   });
+
+  if (!tour) {
+    return next(
+      new AppError('There is no tour with that name', HTTP_404_NOT_FOUND),
+    );
+  }
+
   //2) Build Template
   //3) Render Template using data from (1)
   res
