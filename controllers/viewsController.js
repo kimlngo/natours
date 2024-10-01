@@ -1,4 +1,5 @@
 const TourModel = require('./../models/tourModel');
+const UserModel = require('./../models/userModel');
 const { catchAsync } = require('./../error/error');
 const { HTTP_200_OK, HTTP_404_NOT_FOUND } = require('./../utils/constant');
 const AppError = require('../error/appError');
@@ -58,3 +59,22 @@ exports.getAccount = function (req, res, next) {
     title: 'Account Overview',
   });
 };
+
+exports.updateUserData = catchAsync(async (req, res, next) => {
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    req.user.id,
+    {
+      name: req.body.name,
+      email: req.body.email,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  res.status(HTTP_200_OK).render(ACCOUNT_PUG, {
+    title: 'Account Overview',
+    user: updatedUser,
+  });
+});
