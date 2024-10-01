@@ -15,7 +15,7 @@ export async function login(email, password) {
       showAlert('success', 'Logged in successfully');
       window.setTimeout(() => {
         location.assign('/');
-      }, 1500);
+      }, 1000);
     }
   } catch (e) {
     showAlert('error', e.response.data.message);
@@ -33,7 +33,7 @@ export async function logout() {
       showAlert('success', 'Logged out successfully');
       window.setTimeout(() => {
         location.reload(true);
-      }, 1500);
+      }, 1000);
     }
   } catch (err) {
     showAlert('error', 'Error logging out! Try again.');

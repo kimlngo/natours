@@ -233,6 +233,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //5) valid token, GRANT ACCESS TO PROTECTED ROUTE
   req.user = curUser;
+  res.locals.user = curUser;
   next();
 });
 
