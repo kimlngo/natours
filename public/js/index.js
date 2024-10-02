@@ -1,13 +1,17 @@
 import '@babel/polyfill';
 import { displayMap } from './mapbox';
 import { login, logout } from './login';
-import { updateUserSettings } from './updateSettings';
+import { updateUserSettings, updateUserPassword } from './updateData';
+
+//Constant
+const SUBMIT = 'submit';
 
 //DOM ELEMENTS
 const mapBox = document.getElementById('map');
 const loginForm = document.querySelector('.form--login');
 const logoutBtn = document.querySelector('.nav__el--logout');
 const userUpdateForm = document.querySelector('.form-user-data');
+const userPasswordForm = document.querySelector('.form-user-password');
 
 //DELEGATION
 if (mapBox) {
@@ -16,7 +20,7 @@ if (mapBox) {
 }
 
 if (loginForm) {
-  loginForm.addEventListener('submit', e => {
+  loginForm.addEventListener(SUBMIT, e => {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -30,11 +34,33 @@ if (logoutBtn) {
 }
 
 if (userUpdateForm) {
-  userUpdateForm.addEventListener('submit', e => {
+  userUpdateForm.addEventListener(SUBMIT, e => {
     e.preventDefault();
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
 
     updateUserSettings(name, email);
+  });
+}
+
+if (userPasswordForm) {
+  userPasswordForm.addEventListener(SUBMIT, async e => {
+    e.preventDefault();
+
+    //animation
+    const savePwBtn = document.getElementById('btn-save-password');
+    savePwBtn.textContent = 'Updating...';
+
+    const passwordCurrent = document.getElementById('password-current').value;
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password-confirm').value;
+
+    await updateUserPassword(passwordCurrent, password, passwordConfirm);
+
+    //clear the inputs
+    document.getElementById('password-current').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('password-confirm').value = '';
+    savePwBtn.textContent = 'Save password';
   });
 }
