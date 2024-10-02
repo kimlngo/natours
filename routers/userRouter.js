@@ -2,6 +2,7 @@ const express = require('express');
 const userCtrl = require('./../controllers/userController');
 const authCtrl = require('./../controllers/authController');
 const { ADMIN } = require('../utils/constant');
+
 const router = express.Router();
 
 router.post('/signup', authCtrl.signUp);
@@ -18,7 +19,7 @@ router.use(authCtrl.protect);
 router.patch('/updateMyPassword', authCtrl.updatePassword);
 
 router.get('/me', userCtrl.getMe, userCtrl.getUserById);
-router.patch('/updateMe', userCtrl.updateMe);
+router.patch('/updateMe', userCtrl.uploadUserPhoto, userCtrl.updateMe);
 router.delete('/deleteMe', userCtrl.deleteMe);
 
 //restric all routes after this middleware

@@ -5,10 +5,40 @@ const {
   HTTP_400_BAD_REQUEST,
   HTTP_500_INTERNAL_ERROR,
 } = require('./../utils/constant');
+
+//Constant
+const STORAGE_LOCATION = 'public/img/users';
 const UserModel = require('./../models/userModel');
 const { catchAsync } = require('./../error/error');
 const handlerFactory = require('./handlerFactory');
 const AppError = require('./../error/appError');
+
+const multer = require('multer');
+
+const multerStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, STORAGE_LOCATION);
+  },
+  filename: function (req, file, cb) {
+    const ext = file.mimetype.split('/')[1];
+    const fileName = `user-${req.user.id}-${Date.now()}.${ext}`;
+    cb(null, fileName);
+  },
+});
+
+//User filter to check if uploading file is expected type (e.g., image)
+//yes -> proceed | no -> reject
+//prettier-ignore
+const multerFilter = function (req, file, cb) {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload images only!', HTTP_400_BAD_REQUEST), false);
+  }
+};
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+
+exports.uploadUserPhoto = upload.single('photo');
 
 const filterObject = function (obj, ...allowedFields) {
   const filteredObj = {};
@@ -19,6 +49,8 @@ const filterObject = function (obj, ...allowedFields) {
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
+  console.log(req.file);
+  console.log(req.body);
   //1) Create error if you POSTS password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
