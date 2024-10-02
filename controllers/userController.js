@@ -49,8 +49,6 @@ const filterObject = function (obj, ...allowedFields) {
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-  console.log(req.file);
-  console.log(req.body);
   //1) Create error if you POSTS password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(
@@ -61,8 +59,12 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     );
   }
   //2) filter to only update allowed fields thenu pdate user document
-  const filteredObj = filterObject(req.body, 'name', 'email');
-  const user = await UserModel.findByIdAndUpdate(req.user.id, filteredObj, {
+  const filterBody = filterObject(req.body, 'name', 'email');
+
+  //attach uploading photo if any
+  if (req.file) filterBody.photo = req.file.filename;
+
+  const user = await UserModel.findByIdAndUpdate(req.user.id, filterBody, {
     new: true,
     runValidators: true,
   });
