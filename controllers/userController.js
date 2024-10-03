@@ -12,19 +12,22 @@ const UserModel = require('./../models/userModel');
 const { catchAsync } = require('./../error/error');
 const handlerFactory = require('./handlerFactory');
 const AppError = require('./../error/appError');
-
+const sharp = require('sharp');
 const multer = require('multer');
 
-const multerStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, STORAGE_LOCATION);
-  },
-  filename: function (req, file, cb) {
-    const ext = file.mimetype.split('/')[1];
-    const fileName = `user-${req.user.id}-${Date.now()}.${ext}`;
-    cb(null, fileName);
-  },
-});
+// const multerStorage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, STORAGE_LOCATION);
+//   },
+//   filename: function (req, file, cb) {
+//     const ext = file.mimetype.split('/')[1];
+//     const fileName = `user-${req.user.id}-${Date.now()}.${ext}`;
+//     cb(null, fileName);
+//   },
+// });
+
+//keep the photo in memory and use it for resizing
+const multerStorage = multer.memoryStorage();
 
 //User filter to check if uploading file is expected type (e.g., image)
 //yes -> proceed | no -> reject
@@ -39,6 +42,20 @@ const multerFilter = function (req, file, cb) {
 const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
 
 exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 }) //90%
+    .toFile(`${STORAGE_LOCATION}/${req.file.filename}`);
+
+  next();
+};
 
 const filterObject = function (obj, ...allowedFields) {
   const filteredObj = {};

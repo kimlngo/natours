@@ -19,7 +19,12 @@ router.use(authCtrl.protect);
 router.patch('/updateMyPassword', authCtrl.updatePassword);
 
 router.get('/me', userCtrl.getMe, userCtrl.getUserById);
-router.patch('/updateMe', userCtrl.uploadUserPhoto, userCtrl.updateMe);
+router.patch(
+  '/updateMe',
+  userCtrl.uploadUserPhoto,
+  userCtrl.resizeUserPhoto,
+  userCtrl.updateMe,
+);
 router.delete('/deleteMe', userCtrl.deleteMe);
 
 //restric all routes after this middleware
