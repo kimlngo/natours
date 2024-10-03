@@ -11,8 +11,11 @@ const {
   M_TO_MI,
   M_TO_KM,
 } = require('./../utils/constant');
+
 const handlerFactory = require('./handlerFactory');
 const AppError = require('./../error/appError');
+const multer = require('multer');
+const sharp = require('sharp');
 
 exports.aliasBestFiveTours = function (req, res, next) {
   req.query.limit = '5';
@@ -22,6 +25,55 @@ exports.aliasBestFiveTours = function (req, res, next) {
   next();
 };
 
+//keep the photo in memory and use it for resizing
+const multerStorage = multer.memoryStorage();
+
+//User filter to check if uploading file is expected type (e.g., image)
+//yes -> proceed | no -> reject
+//prettier-ignore
+const multerFilter = function (req, file, cb) {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload images only!', HTTP_400_BAD_REQUEST), false);
+  }
+};
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  //1) Image Cover
+  //put imageCover name into req body for updating
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 }) //90%
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  //2) Images
+  req.body.images = [];
+
+  await Promise.all(
+    req.files.images.map(async (file, i) => {
+      const fileName = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+      await sharp(file.buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 }) //90%
+        .toFile(`public/img/tours/${fileName}`);
+
+      req.body.images.push(fileName);
+    }),
+  );
+  next();
+});
 exports.getAllTours = handlerFactory.getAll(TourModel);
 
 exports.getTourById = handlerFactory.getOne(TourModel, {
