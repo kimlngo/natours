@@ -12780,11 +12780,11 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
 var SUCCESS = 'success';
 var ERROR = 'error';
 var PATCH = 'PATCH';
-function updateUserSettings(_x, _x2) {
+function updateUserSettings(_x) {
   return _updateUserSettings.apply(this, arguments);
 }
 function _updateUserSettings() {
-  _updateUserSettings = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(name, email) {
+  _updateUserSettings = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(data) {
     var res;
     return _regeneratorRuntime().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
@@ -12794,10 +12794,7 @@ function _updateUserSettings() {
           return (0, _axios.default)({
             method: PATCH,
             url: 'http://localhost:8080/api/v1/users/updateMe',
-            data: {
-              name: name,
-              email: email
-            }
+            data: data
           });
         case 3:
           res = _context.sent;
@@ -12818,7 +12815,7 @@ function _updateUserSettings() {
   }));
   return _updateUserSettings.apply(this, arguments);
 }
-function updateUserPassword(_x3, _x4, _x5) {
+function updateUserPassword(_x2, _x3, _x4) {
   return _updateUserPassword.apply(this, arguments);
 }
 function _updateUserPassword() {
@@ -13024,9 +13021,13 @@ if (logoutBtn) {
 if (userUpdateForm) {
   userUpdateForm.addEventListener(SUBMIT, function (e) {
     e.preventDefault();
-    var name = document.getElementById('name').value;
-    var email = document.getElementById('email').value;
-    (0, _updateData.updateUserSettings)(name, email);
+
+    //create multipart form data
+    var form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    (0, _updateData.updateUserSettings)(form);
   });
 }
 if (userPasswordForm) {
@@ -13088,7 +13089,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58162" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60275" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

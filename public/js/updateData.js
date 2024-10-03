@@ -6,15 +6,12 @@ const SUCCESS = 'success';
 const ERROR = 'error';
 const PATCH = 'PATCH';
 
-export async function updateUserSettings(name, email) {
+export async function updateUserSettings(data) {
   try {
     const res = await axios({
       method: PATCH,
       url: 'http://localhost:8080/api/v1/users/updateMe',
-      data: {
-        name,
-        email,
-      },
+      data,
     });
 
     if (res.data.status === SUCCESS) {
