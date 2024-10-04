@@ -14,6 +14,7 @@ const tourRouter = require('./routers/tourRouter');
 const userRouter = require('./routers/userRouter');
 const reviewRouter = require('./routers/reviewRouter');
 const viewRouter = require('./routers/viewRouter');
+const bookingRouter = require('./routers/bookingRouter');
 const { HTTP_404_NOT_FOUND, DEV, ENV } = require('./utils/constant');
 
 const app = express();
@@ -111,6 +112,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 // Default 404 Route
 app.all('*', (req, res, next) => {
