@@ -29,45 +29,45 @@ exports.signUp = catchAsync(async function (req, res, next) {
   //http://localhost:8080/me
   // const url = `${req.protocol}://${req.get('host')}/me`;
   const url = `${req.protocol}://localhost:8080/me`;
-  console.log('url', url);
+
   await new Email(newUser, url).sendWelcome();
   createAndSendToken(newUser, HTTP_201_CREATED, res);
 });
 
-// exports.signUp = catchAsync(async function (req, res, next) {
-//   const newUser = await UserModel.create({
-//     name: req.body.name,
-//     email: req.body.email,
-//     password: req.body.password,
-//     passwordConfirm: req.body.passwordConfirm,
-//     role: req.body.role,
-//   });
+exports.signUpWithEmailConfirm = catchAsync(async function (req, res, next) {
+  const newUser = await UserModel.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+  });
 
-//   //Create confirm email token
-//   const confirmToken = newUser.createConfirmEmailToken();
-//   await newUser.save({ validateBeforeSave: false });
+  //Create confirm email token
+  const confirmToken = newUser.createConfirmEmailToken();
+  await newUser.save({ validateBeforeSave: false });
 
-//   //Send the token to user's email
-//   try {
-//     await emailSender.sendConfirmEmail(req, confirmToken);
+  //Send the token to user's email
+  try {
+    const url = `${req.protocol}://${req.get('host')}/api/v1/users/confirmEmail/${confirmToken}`;
+    await new Email(newUser, url).sendConfirmEmail();
 
-//     res.status(HTTP_200_OK).json({
-//       status: SUCCESS,
-//       message: 'Email Confirm Token sent to email',
-//     });
-//   } catch (err) {
-//     newUser.emailConfirmToken = undefined;
-//     newUser.emailConfirmExpires = undefined;
-//     await newUser.save({ validateBeforeSave: false });
+    res.status(HTTP_200_OK).json({
+      status: SUCCESS,
+      message: 'Email Confirm Token sent to email',
+    });
+  } catch (err) {
+    newUser.emailConfirmToken = undefined;
+    newUser.emailConfirmExpires = undefined;
+    await newUser.save({ validateBeforeSave: false });
 
-//     return next(
-//       new AppError(
-//         'There was an error while sending email. Try again later!',
-//         HTTP_500_INTERNAL_ERROR,
-//       ),
-//     );
-//   }
-// });
+    return next(
+      new AppError(
+        'There was an error while sending email. Try again later!',
+        HTTP_500_INTERNAL_ERROR,
+      ),
+    );
+  }
+});
 
 exports.confirmEmail = catchAsync(async (req, res, next) => {
   //Get the token from request
@@ -305,7 +305,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   //3) Send the token to user's email
   try {
-    // TODO: fix this -> await emailSender.sendResetPasswordEmail(req, resetToken);
+    const url = `${req.protocol}://localhost:8080/api/v1/users/resetPassword/${resetToken}`;
+
+    await new Email(user, url).sendPasswordReset();
 
     res.status(HTTP_200_OK).json({
       status: SUCCESS,
