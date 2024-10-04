@@ -12,18 +12,6 @@ module.exports = class Email {
   }
 
   createNewTransport() {
-    if (ENV.NODE_ENV.trim() === PROD) {
-      return this.#createProdTransport();
-    }
-    return this.#createDevTransport();
-  }
-
-  #createProdTransport() {
-    //sendgrid
-    return 1;
-  }
-
-  #createDevTransport() {
     return nodemailer.createTransport({
       host: ENV.EMAIL_HOST,
       port: ENV.EMAIL_PORT,
