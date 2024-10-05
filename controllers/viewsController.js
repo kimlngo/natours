@@ -1,5 +1,6 @@
 const TourModel = require('./../models/tourModel');
 const UserModel = require('./../models/userModel');
+const BookingModel = require('./../models/bookingModel');
 const { catchAsync } = require('./../error/error');
 const { HTTP_200_OK, HTTP_404_NOT_FOUND } = require('./../utils/constant');
 const AppError = require('../error/appError');
@@ -59,6 +60,22 @@ exports.getAccount = function (req, res, next) {
     title: 'Account Overview',
   });
 };
+
+exports.getMyTours = catchAsync(async function (req, res, next) {
+  //1) Find all bookings with currently logged user id
+  const bookings = await BookingModel.find({ user: req.user.id });
+
+  //2) Find tours with the returned IDs
+  const tourIds = bookings.map(booking => booking.tour);
+  const tours = await TourModel.find({
+    _id: { $in: tourIds },
+  });
+
+  res.status(HTTP_200_OK).render(OVERVIEW_PUG, {
+    title: 'My Tours',
+    tours,
+  });
+});
 
 exports.updateUserData = catchAsync(async (req, res, next) => {
   const updatedUser = await UserModel.findByIdAndUpdate(
