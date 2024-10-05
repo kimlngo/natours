@@ -42,10 +42,12 @@ block content
           - const startDate = tour.startDates[0].toLocaleString('en-us', {month: 'long', year:'numeric'})
           - const groupSize = `${tour.maxGroupSize} people`
           - const rating = `${tour.ratingsAverage} / 5`
+          - const price = `$${tour.price}.00`
           +overviewBox('Next date', startDate, 'calendar')
           +overviewBox('Difficulty', tour.difficulty, 'trending-up')
           +overviewBox('Participants', groupSize, 'user')
           +overviewBox('Rating', rating, 'star')
+          +overviewBox('Price', price, 'dollar-sign')
 
         .overview-box__group
           h2.heading-secondary.ma-bt-lg Your tour guides
