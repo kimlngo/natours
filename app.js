@@ -7,6 +7,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 
 const AppError = require('./error/appError');
 const { errorHandler } = require('./error/error');
@@ -99,6 +100,8 @@ app.use(
     ],
   }),
 );
+
+app.use(compression());
 
 //test middleware
 //add request timestamp to request object using middleware
