@@ -1,13 +1,15 @@
 const TourModel = require('./../models/tourModel');
+const BookingModel = require('./../models/bookingModel');
 const { catchAsync } = require('./../error/error');
-const handlerFactory = require('./handlerFactory');
-const AppError = require('./../error/appError');
+
 const { ENV, HTTP_200_OK, SUCCESS } = require('./../utils/constant');
 const stripe = require('stripe')(ENV.STRIPE_SECRET_KEY);
 
 exports.getCheckoutSession = catchAsync(async function (req, res, next) {
   //1) Get the currently booked tour
-  const tour = await TourModel.findById(req.params.tourId);
+  const tourId = req.params.tourId;
+  const userId = req.user.id;
+  const tour = await TourModel.findById(tourId);
 
   //2) Create sesion checkout
   const product = await stripe.products.create({
@@ -25,10 +27,10 @@ exports.getCheckoutSession = catchAsync(async function (req, res, next) {
   const session = await stripe.checkout.sessions.create({
     //info abt session
     payment_method_types: ['card'],
-    success_url: `${req.protocol}://${req.get('host')}/`,
+    success_url: `${req.protocol}://${req.get('host')}/?tour=${tourId}&user=${userId}&price=${tour.price}`,
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
     customer_email: req.user.email,
-    client_reference_id: req.params.tourId,
+    client_reference_id: tourId,
     mode: 'payment',
     //info abt purchased product
     line_items: [
@@ -44,4 +46,20 @@ exports.getCheckoutSession = catchAsync(async function (req, res, next) {
     status: SUCCESS,
     session,
   });
+});
+
+exports.createBookingCheckout = catchAsync(async function (req, res, next) {
+  //This is only Temporary Solution, because it's unsecured: everyone can make booking without paying
+  const { tour, user, price } = req.query;
+
+  if (!tour && !user && !price) return next();
+
+  await BookingModel.create({
+    tour,
+    user,
+    price,
+  });
+
+  //`${req.protocol}://${req.get('host')}/?tour=${tourId}&user=${userId}&price=${tour.price}`
+  res.redirect(req.originalUrl.split('?')[0]);
 });

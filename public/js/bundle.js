@@ -12869,35 +12869,34 @@ function _regeneratorRuntime() { "use strict"; /*! regenerator-runtime -- Copyri
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 //prettier-ignore
-
+var stripe = Stripe('pk_test_51Q6DqAHOZnGsE4kVTFoKfPFFNQUvowUuoy4Ml3spMiOmRhjJqpSbPVMRFvC3s89L9UnC5OWE2Au8EwCVxa1RfBiH00NHNQw48C');
 var bookTour = exports.bookTour = /*#__PURE__*/function () {
   var _ref = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(tourId) {
-    var stripe, res;
+    var res;
     return _regeneratorRuntime().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
           _context.prev = 0;
-          stripe = Stripe('pk_test_51Q6DqAHOZnGsE4kVTFoKfPFFNQUvowUuoy4Ml3spMiOmRhjJqpSbPVMRFvC3s89L9UnC5OWE2Au8EwCVxa1RfBiH00NHNQw48C'); //1) get checkout session from API
-          _context.next = 4;
+          _context.next = 3;
           return (0, _axios.default)("http://localhost:8080/api/v1/bookings/checkout-session/".concat(tourId));
-        case 4:
+        case 3:
           res = _context.sent;
-          _context.next = 7;
+          _context.next = 6;
           return stripe.redirectToCheckout({
             sessionId: res.data.session.id
           });
-        case 7:
-          _context.next = 12;
+        case 6:
+          _context.next = 11;
           break;
-        case 9:
-          _context.prev = 9;
+        case 8:
+          _context.prev = 8;
           _context.t0 = _context["catch"](0);
           (0, _alert.showAlert)('error', _context.t0);
-        case 12:
+        case 11:
         case "end":
           return _context.stop();
       }
-    }, _callee, null, [[0, 9]]);
+    }, _callee, null, [[0, 8]]);
   }));
   return function bookTour(_x) {
     return _ref.apply(this, arguments);
