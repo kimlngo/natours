@@ -1,8 +1,10 @@
 const express = require('express');
 const bookingCtrl = require('../controllers/bookingController');
 const authCtrl = require('../controllers/authController');
-const { ADMIN, USER } = require('../utils/constant');
+const { ADMIN, LEAD_GUIDE } = require('../utils/constant');
 const router = express.Router();
+
+router.use(authCtrl.protect);
 
 router.get(
   '/checkout-session/:tourId',
@@ -10,17 +12,16 @@ router.get(
   bookingCtrl.getCheckoutSession,
 );
 
-router.get(
-  '/',
-  authCtrl.protect,
-  authCtrl.restrictTo(ADMIN),
-  bookingCtrl.getAllBookings,
-);
+router.use(authCtrl.restrictTo(ADMIN, LEAD_GUIDE));
 
-router.get(
-  '/:id',
-  authCtrl.protect,
-  authCtrl.restrictTo(ADMIN, USER),
-  bookingCtrl.getOneBooking,
-);
+router
+  .route('/')
+  .get(bookingCtrl.getAllBookings)
+  .post(bookingCtrl.createBooking);
+
+router
+  .route('/:id')
+  .get(bookingCtrl.getOneBooking)
+  .patch(bookingCtrl.updateBooking)
+  .delete(bookingCtrl.deleteBooking);
 module.exports = router;
