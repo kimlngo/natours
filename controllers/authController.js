@@ -27,8 +27,8 @@ exports.signUp = catchAsync(async function (req, res, next) {
   });
 
   //http://localhost:8080/me
-  // const url = `${req.protocol}://${req.get('host')}/me`;
-  const url = `${req.protocol}://localhost:8080/me`;
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  // const url = `${req.protocol}://localhost:8080/me`;
 
   await new Email(newUser, url).sendWelcome();
   createAndSendToken(newUser, HTTP_201_CREATED, res);
@@ -305,7 +305,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   //3) Send the token to user's email
   try {
-    const url = `${req.protocol}://localhost:8080/api/v1/users/resetPassword/${resetToken}`;
+    const url = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
     await new Email(user, url).sendPasswordReset();
 
