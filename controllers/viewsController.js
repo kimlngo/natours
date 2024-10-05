@@ -65,11 +65,8 @@ exports.getMyTours = catchAsync(async function (req, res, next) {
   //1) Find all bookings with currently logged user id
   const bookings = await BookingModel.find({ user: req.user.id });
 
-  //2) Find tours with the returned IDs
-  const tourIds = bookings.map(booking => booking.tour);
-  const tours = await TourModel.find({
-    _id: { $in: tourIds },
-  });
+  //2) Tours are populated with bookings hence simply extract for rendering
+  const tours = bookings.map(b => b.tour);
 
   res.status(HTTP_200_OK).render(OVERVIEW_PUG, {
     title: 'My Tours',

@@ -1,7 +1,7 @@
 const TourModel = require('./../models/tourModel');
 const BookingModel = require('./../models/bookingModel');
 const { catchAsync } = require('./../error/error');
-
+const handlerFactory = require('./handlerFactory');
 const { ENV, HTTP_200_OK, SUCCESS } = require('./../utils/constant');
 const stripe = require('stripe')(ENV.STRIPE_SECRET_KEY);
 
@@ -60,6 +60,9 @@ exports.createBookingCheckout = catchAsync(async function (req, res, next) {
     price,
   });
 
-  //`${req.protocol}://${req.get('host')}/?tour=${tourId}&user=${userId}&price=${tour.price}`
+  //Redirect to /overview without tour, user and price info
   res.redirect(req.originalUrl.split('?')[0]);
 });
+
+exports.getAllBookings = handlerFactory.getAll(BookingModel);
+exports.getOneBooking = handlerFactory.getOne(BookingModel);
