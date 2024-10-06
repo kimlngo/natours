@@ -1,6 +1,7 @@
 import '@babel/polyfill';
 import { displayMap } from './mapbox';
 import { login, logout } from './login';
+import { signUp } from './signup';
 import { updateUserSettings, updateUserPassword } from './updateData';
 import { bookTour } from './stripe';
 //Constant
@@ -9,6 +10,8 @@ const SUBMIT = 'submit';
 //DOM ELEMENTS
 const mapBox = document.getElementById('map');
 const loginForm = document.querySelector('.form--login');
+const signUpForm = document.querySelector('.form--signup');
+
 const logoutBtn = document.querySelector('.nav__el--logout');
 const userUpdateForm = document.querySelector('.form-user-data');
 const userPasswordForm = document.querySelector('.form-user-password');
@@ -30,6 +33,17 @@ if (loginForm) {
   });
 }
 
+if (signUpForm) {
+  signUpForm.addEventListener(SUBMIT, e => {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password-confirm').value;
+
+    signUp(name, email, password, passwordConfirm);
+  });
+}
 if (logoutBtn) {
   logoutBtn.addEventListener('click', logout);
 }

@@ -17,8 +17,8 @@ export async function login(email, password) {
         location.assign('/');
       }, 1000);
     }
-  } catch (e) {
-    showAlert('error', e.response.data.message);
+  } catch (err) {
+    showAlert('error', err.response.data.message);
   }
 }
 
@@ -36,6 +36,6 @@ export async function logout() {
       }, 1000);
     }
   } catch (err) {
-    showAlert('error', 'Error logging out! Try again.');
+    showAlert('error', 'Error logging out! Please try again.');
   }
 }
