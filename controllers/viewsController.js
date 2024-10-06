@@ -8,6 +8,7 @@ const AppError = require('../error/appError');
 const OVERVIEW_PUG = 'overview';
 const TOUR_PUG = 'tour';
 const LOGIN_PUG = 'login';
+const SIGNUP_PUG = 'signup';
 const ACCOUNT_PUG = 'account';
 
 exports.getOverview = catchAsync(async function (req, res, next) {
@@ -52,6 +53,12 @@ exports.getTourDetail = catchAsync(async function (req, res, next) {
 exports.getLoginForm = function (req, res, next) {
   res.status(HTTP_200_OK).render(LOGIN_PUG, {
     title: 'Log into your account',
+  });
+};
+
+exports.getSignUpForm = function (req, res, next) {
+  res.status(HTTP_200_OK).render(SIGNUP_PUG, {
+    title: 'Sign up new account',
   });
 };
 
